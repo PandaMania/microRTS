@@ -106,6 +106,10 @@ import ai.evaluation.SimpleOptEvaluationFunction;
 import ai.mcts.believestatemcts.BS3_NaiveMCTS;
 import ai.mcts.uct.DownsamplingUCT;
 import ai.scv.SCV;
+import ai.mcts.huct.HEIRUCT;
+import ai.mcts.huct.HEIRDownsamplingUCT;
+import ai.mcts.huct.HEIRUCTFirstPlayUrgency;
+import ai.mcts.huct.HEIRUCTUnitActions;
 
 /**
  *
@@ -156,6 +160,9 @@ public class FEStatePane extends JPanel {
                    UCTUnitActions.class,
                    UCTFirstPlayUrgency.class,
                    DownsamplingUCT.class,
+                     HEIRUCTUnitActions.class,
+                    HEIRUCTFirstPlayUrgency.class,
+                    HEIRDownsamplingUCT.class,
                    NaiveMCTS.class,
                    BS3_NaiveMCTS.class,
                    MLPSMCTS.class,
