@@ -152,9 +152,10 @@ public class FEStatePane extends JPanel {
                    MonteCarlo.class,
                    LSI.class,
                    UCT.class,
+            HEIRUCT.class, // added this here
                    UCTUnitActions.class,
                    UCTFirstPlayUrgency.class,
-                   DownsamplingUCT.class, 
+                   DownsamplingUCT.class,
                    NaiveMCTS.class,
                    BS3_NaiveMCTS.class,
                    MLPSMCTS.class,
