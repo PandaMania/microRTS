@@ -44,6 +44,14 @@ public class PlayerActionGenerator {
     public List<Pair<Unit,List<UnitAction>>> getChoices() {
         return choices;
     }
+    
+    public int[] getChoiceSizes() {
+    	return choiceSizes;
+    }
+    
+    public int[] getCurrentChoice() {
+    	return currentChoice;
+    }
         
 
     /**
