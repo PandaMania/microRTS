@@ -38,7 +38,7 @@ public class UCTNode {
         parent = a_parent;
         gs = a_gs;
         if (parent==null) depth = 0;
-                     else depth = parent.depth+1;        
+                     else depth = parent.depth+1;
         evaluation_bound = bound;
 
         while(gs.winner()==-1 && 
@@ -68,7 +68,6 @@ public class UCTNode {
     }
     
     public UCTNode UCTSelectLeaf(int maxplayer, int minplayer, long cutOffTime, int max_depth) throws Exception {
-        
         // Cut the tree policy at a predefined depth
         if (depth>=max_depth) return this;        
         

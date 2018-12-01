@@ -25,6 +25,7 @@ public class PlayerActionGenerator {
     int currentChoice[] = null;
     boolean moreActions = true;
     
+    
     /**
      * 
      * @return
@@ -195,6 +196,65 @@ public class PlayerActionGenerator {
         lastAction = null;
         return null;
     }
+    public class childInfo {
+    	public int actionIdx;
+    	public boolean newChild;
+    	public childInfo(boolean newChild, int actionIdx) {
+    		this.newChild = newChild;
+    		this.actionIdx = actionIdx;
+    	}
+    }
+    //search for a new valid action for a unit. If there is no available a null move is rendered.
+    //returns with a bool variable indicating whether we need to add a new child
+    public childInfo updateAction(int unitIdx, int actionIdx) {
+    	boolean consistent = false;
+    	//If this is the first unit action to be added, we initialize lastAction with the game state of root
+    	if ( unitIdx == 0) {
+    		lastAction = new PlayerAction();
+    		lastAction.setResourceUsage(base_ru.clone());
+    	}
+    	boolean first = actionIdx == 0;
+    	Unit u = choices.get(unitIdx).m_a;
+    	while (choiceSizes[unitIdx]>actionIdx) {
+    		Pair<Unit, List<UnitAction>> unitChoices = choices.get(unitIdx);
+			int choice = actionIdx;
+			u = unitChoices.m_a;
+			UnitAction ua = unitChoices.m_b.get(choice);
+
+			ResourceUsage r2 = ua.resourceUsage(u, physicalGameState);
+			actionIdx++;
+			if (lastAction.getResourceUsage().consistentWith(r2, gameState)) {
+				lastAction.getResourceUsage().merge(r2);
+				lastAction.addUnitAction(u, ua);
+				consistent = true;
+				break;
+			}
+    	}
+    	if (!consistent)
+    	{
+    		if (first) {
+    			actionIdx++;
+        		lastAction.addUnitAction(u, new UnitAction(UnitAction.TYPE_NONE, 1));
+        		//We create node with null move only if there is no valid action for the unit
+        		return new childInfo(true, actionIdx);
+    		}
+    		return new childInfo(false, actionIdx);
+    	}
+    	return new childInfo(true, actionIdx);
+    }
+    
+    public void addToLastAction(int unitIdx, int actionIdx) {
+    	Pair<Unit, List<UnitAction>> unitChoices = choices.get(unitIdx);
+    	Unit u = unitChoices.m_a;
+    	UnitAction ua;
+    	//If it is a null action
+    	if (actionIdx == choiceSizes[unitIdx])
+    		ua = new UnitAction(UnitAction.TYPE_NONE, 1);
+    	else
+    		ua = unitChoices.m_b.get(actionIdx);
+    	lastAction.addUnitAction(u, ua);
+    }
+    
     
     /**
      * Returns a random player action for the game state in this object

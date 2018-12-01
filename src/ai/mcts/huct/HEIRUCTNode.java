@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javafx.util.Pair;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.PlayerActionGenerator;
+import rts.PlayerActionGenerator.childInfo;
 
 
 /**
@@ -19,7 +21,7 @@ import rts.PlayerActionGenerator;
  */
 public class HEIRUCTNode {
     static Random r = new Random();
-    public static float C = 0.05f;   // this is the constant that regulates exploration vs exploitation, it must be tuned for each domain
+    public static float C = 1f;   // this is the constant that regulates exploration vs exploitation, it must be tuned for each domain
 //    public static float C = 1;   // this is the constant that regulates exploration vs exploitation, it must be tuned for each domain
 
     public int type;    // 0 : max, 1 : min, -1: Game-over
@@ -31,11 +33,11 @@ public class HEIRUCTNode {
     boolean hasMoreActions = true;
     PlayerActionGenerator moveGenerator = null;
     int[] squadIdxs = null;
+    public int actionIdx;
     public List<PlayerAction> actions = null;
-    public ArrayList<HEIRUCTNode> uctChildrenSorted = null;
-    public HEIRHierarchicalNode[] hChildren = null;
+    public ArrayList<Pair<Integer, HEIRUCTNode>> uctChildren = null;
     //This list is for ordering based on the HEIRUCT values
-    public ArrayList<HEIRHierarchicalNode> hChildrenSorted = null;
+    public ArrayList<Pair<Integer, HEIRHierarchicalNode>> hChildren = null;
     float evaluation_bound = 0;
     float accum_evaluation = 0;
     int visit_count = 0;
@@ -44,11 +46,8 @@ public class HEIRUCTNode {
     public HEIRUCTNode(int maxplayer, int minplayer, GameState a_gs, HEIRUCTNode a_parent, HEIRHierarchicalNode h_parent, float bound) throws Exception {
         uctParent = a_parent;
         hParent = h_parent;
-        if(h_parent != null)
-            h_parent.uctChildrenSorted.add(this);
-        if(a_parent != null)
-            a_parent.uctChildrenSorted.add(this);
         gs = a_gs;
+        actionIdx = 0;
         if (uctParent==null) depth = 0;
         else depth = uctParent.depth+1;
         evaluation_bound = bound;
@@ -66,9 +65,8 @@ public class HEIRUCTNode {
             moveGenerator = new PlayerActionGenerator(a_gs, maxplayer);
             moveGenerator.randomizeOrder();
             actions = new ArrayList<>();
-            uctChildrenSorted = new ArrayList<HEIRUCTNode>();
-            hChildrenSorted = new ArrayList<HEIRHierarchicalNode>();
-            hChildren = new HEIRHierarchicalNode[moveGenerator.getChoiceSizes()[0]];
+            uctChildren = new ArrayList<Pair<Integer, HEIRUCTNode>>();
+            hChildren = new ArrayList<Pair<Integer, HEIRHierarchicalNode>>();
 
             //This is the array of starting indeces for squads. Here we just suppose that there are
             //no squads
@@ -82,9 +80,8 @@ public class HEIRUCTNode {
             moveGenerator = new PlayerActionGenerator(a_gs, minplayer);
             moveGenerator.randomizeOrder();
             actions = new ArrayList<>();
-            uctChildrenSorted = new ArrayList<HEIRUCTNode>();
-            hChildrenSorted = new ArrayList<HEIRHierarchicalNode>();
-            hChildren = new HEIRHierarchicalNode[moveGenerator.getChoiceSizes()[0]];
+            uctChildren = new ArrayList<Pair<Integer, HEIRUCTNode>>();
+            hChildren = new ArrayList<Pair<Integer, HEIRHierarchicalNode>>();
 
             //This is the array of starting indeces for squads. Here we just suppose that there are
             //no squads
@@ -104,119 +101,126 @@ public class HEIRUCTNode {
         if (depth>=max_depth) return this;
 
         // if non visited children, visit:
-        if (hasMoreActions) {
-            if (moveGenerator==null) {
+        if (type == 0)
+        	moveGenerator = new PlayerActionGenerator(gs, maxplayer);
+        else if (type == 1)
+        	moveGenerator = new PlayerActionGenerator(gs, minplayer);
+        if (moveGenerator==null) {
 //                System.out.println("No more leafs because moveGenerator = null!");
-                return this;
-            }
-            PlayerAction a = moveGenerator.getNextAction(cutOffTime);
-            if (a!=null) {
-                HEIRUCTNode node = null;
-                int[] choices = moveGenerator.getCurrentChoice();
-                int[] choicesizes = moveGenerator.getChoiceSizes();
-                //getNextAction set the action index to invalid
-                for (int i = 0; i < choices.length; i++) {
-                    if (choices[i] >= choicesizes[i])
-                        choices[i]--;
-                }
-                if (squadIdxs.length>1) {
-                    if (hChildren[choices[0]] == null ) {
-                        hChildren[choices[0]] = new HEIRHierarchicalNode(choicesizes[squadIdxs[1]], this, evaluation_bound);
-                        hChildrenSorted.add(hChildren[choices[0]]);
-                    }
-
-                    HEIRHierarchicalNode HNode = hChildren[choices[0]];
-                    int i;
-                    for (i = 1; i< choices.length-1; i++)
-                    {
-                        if (HNode.hChildren[choices[squadIdxs[i]]] == null) {
-                            HNode.hChildren[choices[squadIdxs[i]]] = new HEIRHierarchicalNode(choicesizes[squadIdxs[i+1]], this, evaluation_bound);
-                            HNode.hChildrenSorted.add(HNode.hChildren[choices[squadIdxs[i]]]);
-                            HNode = HNode.hChildren[choices[squadIdxs[i]]];
-                            i++;
-                            break;
-                        }
-                        HNode = HNode.hChildren[choices[squadIdxs[i]]];
-                    }
-                    int cc=0;
-                    if (HNode.hChildren.length==choices[squadIdxs[i]])
-                        cc+=1;
-                    //After finding a non-visited sub-action we do not have to check for null pointer
-                    for (; i< choices.length-1; i++)
-                    {
-                        HNode.hChildren[choices[squadIdxs[i]]] = new HEIRHierarchicalNode(choicesizes[squadIdxs[i+1]], this, evaluation_bound);
-                        HNode.hChildrenSorted.add(HNode.hChildren[choices[squadIdxs[i]]]);
-                        HNode = HNode.hChildren[choices[squadIdxs[i]]];
-                    }
-
-                    actions.add(a);
-                    GameState gs2 = gs.cloneIssue(a);
-                    node = new HEIRUCTNode(maxplayer, minplayer, gs2.clone(), this, HNode, evaluation_bound);
-                    HNode.uctChildren[choices[squadIdxs[i]]] = node;
-                }
-                else {
-                    actions.add(a);
-                    GameState gs2 = gs.cloneIssue(a);
-                    node = new HEIRUCTNode(maxplayer, minplayer, gs2.clone(), this, null, evaluation_bound);
-                }
-
-                return node;
-            } else {
-                hasMoreActions = false;
-            }
+            return this;
         }
-
-        // Bandit policy:
-        double best_score = 0;
-
-        HEIRHierarchicalNode hBest = null;
-        ArrayList<HEIRHierarchicalNode> hChildren = this.hChildrenSorted;
-        if (hChildren.size() != 0) {
-            for (int i = 0; i< squadIdxs.length-1; i++) {
-                hBest = null;
-                for (HEIRHierarchicalNode child : hChildren) {
-                    double tmp = child.childValue();
-                    if (hBest==null || tmp>best_score) {
-                        hBest = child;
+        
+        if (squadIdxs.length>1) {
+        	HEIRHierarchicalNode HNode;
+        	childInfo info = moveGenerator.updateAction(0,actionIdx);
+        	actionIdx = info.actionIdx;
+        	if (info.newChild) {
+        		HNode = new HEIRHierarchicalNode(this, evaluation_bound);
+                hChildren.add(new Pair<>(actionIdx-1,HNode));
+        	}
+        	else {
+        		Pair<Integer,HEIRHierarchicalNode> best = null;
+            	double best_score = 0;
+                for (Pair<Integer,HEIRHierarchicalNode> child : this.hChildren) {
+                	HEIRHierarchicalNode childNode = child.getValue();
+                    double tmp = childNode.childValue(visit_count);
+                    if (best==null || tmp>best_score) {
+                        best = child;
                         best_score = tmp;
                     }
                 }
-                hChildren = hBest.hChildrenSorted;
+                moveGenerator.addToLastAction(0, best.getKey());
+                HNode = best.getValue();
+        	}
+        	int i;
+            for (i = 1; i < squadIdxs.length-1; i++) {
+            	info = moveGenerator.updateAction(squadIdxs[i], HNode.actionIdx);
+            	HNode.actionIdx = info.actionIdx;
+            	if (info.newChild) {
+            		HEIRHierarchicalNode newHNode = new HEIRHierarchicalNode(HNode, evaluation_bound);
+                    HNode.hChildren.add(new Pair<>(HNode.actionIdx-1,newHNode));
+                    HNode = newHNode;
+            	}
+            	else {
+            		Pair<Integer,HEIRHierarchicalNode> best = null;
+                	double best_score = 0;
+                    for (Pair<Integer,HEIRHierarchicalNode> child : HNode.hChildren) {
+                    	HEIRHierarchicalNode childNode = child.getValue();
+                        double tmp = childNode.childValue(HNode.visit_count);
+                        if (best==null || tmp>best_score) {
+                            best = child;
+                            best_score = tmp;
+                        }
+                    }
+                    moveGenerator.addToLastAction(squadIdxs[i], best.getKey());
+                    HNode = best.getValue();
+            	}
+            }
+            info = moveGenerator.updateAction(squadIdxs[i], HNode.actionIdx);
+            HNode.actionIdx = info.actionIdx;
+            GameState gs2 = gs.cloneIssue(moveGenerator.getLastAction());
+            HEIRUCTNode node;
+            if (info.newChild) {
+            	actions.add(moveGenerator.getLastAction());
+                node = new HEIRUCTNode(maxplayer, minplayer, gs2.clone(), this, HNode, evaluation_bound);
+                HNode.uctChildren.add(new Pair<>(HNode.actionIdx-1,node));
+                this.uctChildren.add(new Pair<>(HNode.actionIdx-1,node));
+            	return node;
+            }
+            else {
+            	Pair<Integer,HEIRUCTNode> best = null;
+            	double best_score = 0;
+                for (Pair<Integer,HEIRUCTNode> child : HNode.uctChildren) {
+                	HEIRUCTNode childNode = child.getValue();
+                    double tmp = childNode.childValue(HNode.visit_count);
+                    if (best==null || tmp>best_score) {
+                        best = child;
+                        best_score = tmp;
+                    }
+                }
+                moveGenerator.addToLastAction(squadIdxs[i], best.getKey());
+                node = best.getValue();
+            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
             }
         }
-
-        ArrayList<HEIRUCTNode> uctChildren;
-        //If there is at least one level of hierarchy
-        if (hBest != null)
-            uctChildren = hBest.uctChildrenSorted;
-        else
-            uctChildren = this.uctChildrenSorted;
-        HEIRUCTNode best = null;
-        for (HEIRUCTNode child : uctChildren) {
-            double tmp = childValue(child);
-            if (best==null || tmp>best_score) {
-                best = child;
-                best_score = tmp;
+        else {
+        	childInfo info = moveGenerator.updateAction(squadIdxs[squadIdxs.length-1], actionIdx);
+        	actionIdx = info.actionIdx;
+            GameState gs2 = gs.cloneIssue(moveGenerator.getLastAction());
+            HEIRUCTNode node;
+            if (info.newChild) {
+            	actions.add(moveGenerator.getLastAction());
+                node = new HEIRUCTNode(maxplayer, minplayer, gs2.clone(), this, null, evaluation_bound);
+                this.uctChildren.add(new Pair<>(actionIdx-1,node));
+            	return node;
+            }
+            else {
+            	Pair<Integer,HEIRUCTNode> best = null;
+            	double best_score = 0;
+                for (Pair<Integer,HEIRUCTNode> child : this.uctChildren) {
+                	HEIRUCTNode childNode = child.getValue();
+                    double tmp = childNode.childValue(visit_count);
+                    if (best==null || tmp>best_score) {
+                        best = child;
+                        best_score = tmp;
+                    }
+                }
+                moveGenerator.addToLastAction(squadIdxs[squadIdxs.length-1], best.getKey());
+                node = best.getValue();
+            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
             }
         }
-
-        if (best==null) {
-//            System.out.println("No more leafs because this node has no children!");
-//            return null;
-            return this;
-        }
-        return best.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
-//        return best;
     }
 
-    public double childValue(HEIRUCTNode child) {
-        double exploitation = ((double)child.accum_evaluation) / child.visit_count;
-        double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
-        if (type==0) {
+    public double childValue(double parent_visit_count) {
+        double exploitation = ((double)accum_evaluation) / visit_count;
+        double exploration = Math.sqrt(Math.log(parent_visit_count)/visit_count);
+        //We use the parent's type
+        if (uctParent.type==0) {
             // max node:
-            exploitation = (evaluation_bound + exploitation)/(2*evaluation_bound);
+            exploitation = (uctParent.evaluation_bound + exploitation)/(2*uctParent.evaluation_bound);
         } else {
-            exploitation = (evaluation_bound - exploitation)/(2*evaluation_bound);
+            exploitation = (uctParent.evaluation_bound - exploitation)/(2*uctParent.evaluation_bound);
         }
 //            System.out.println(exploitation + " + " + exploration);
 
@@ -224,12 +228,11 @@ public class HEIRUCTNode {
         return tmp;
     }
 
-
     public void showNode(int depth, int maxdepth) {
         int mostVisitedIdx = -1;
         HEIRUCTNode mostVisited = null;
-        for(int i = 0;i<uctChildrenSorted.size();i++) {
-            HEIRUCTNode child = uctChildrenSorted.get(i);
+        for(int i = 0;i<uctChildren.size();i++) {
+            HEIRUCTNode child = uctChildren.get(i).getValue();
             for(int j = 0;j<depth;j++) System.out.print("    ");
             System.out.println("child explored " + child.visit_count + " Avg evaluation: " + (child.accum_evaluation/((double)child.visit_count)) + " : " + actions.get(i));
             if (depth<maxdepth) child.showNode(depth+1,maxdepth);

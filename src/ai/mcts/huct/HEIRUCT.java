@@ -175,15 +175,15 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     public PlayerAction getBestActionSoFar() {
         total_actions_issued++;
 
-        if (tree.uctChildrenSorted==null) {
+        if (tree.uctChildren==null) {
             if (DEBUG>=1) System.out.println(this.getClass().getSimpleName() + " no children selected. Returning an empty asction");
             return new PlayerAction();
         }
 
         int mostVisitedIdx = -1;
         HEIRUCTNode mostVisited = null;
-        for(int i = 0;i<tree.uctChildrenSorted.size();i++) {
-            HEIRUCTNode child = tree.uctChildrenSorted.get(i);
+        for(int i = 0;i<tree.uctChildren.size();i++) {
+            HEIRUCTNode child = tree.uctChildren.get(i).getValue();
             if (mostVisited == null || child.visit_count>mostVisited.visit_count ||
                     (child.visit_count==mostVisited.visit_count &&
                             child.accum_evaluation > mostVisited.accum_evaluation)) {
