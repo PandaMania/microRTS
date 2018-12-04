@@ -41,7 +41,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     long total_runs_this_move = 0;
 
     int MAXSIMULATIONTIME = 1024;
-    int MAX_TREE_DEPTH = 10;
+    int MAX_TREE_DEPTH = 12;
 
     int playerForThisComputation;
 

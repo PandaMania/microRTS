@@ -173,7 +173,7 @@ public class HEIRUCTNode extends HEIRNode{
     		HEIRHierarchicalNode best = null;
     		//find the child with the highest UCT value
     		for (HEIRHierarchicalNode child : Node.hChildren) {
-                double tmp = child.childValue(Node.visit_count);
+                double tmp = child.childValue(Node);
                 if (best==null || tmp>best_score) {
                     best = child;
                     best_score = tmp;
@@ -188,7 +188,7 @@ public class HEIRUCTNode extends HEIRNode{
         else {
         	HEIRUCTNode best = null;
     		for (HEIRUCTNode child : Node.uctChildren) {
-                double tmp = child.childValue(Node.visit_count);
+                double tmp = child.childValue(Node);
                 if (best==null || tmp>best_score) {
                     best = child;
                     best_score = tmp;
@@ -199,11 +199,11 @@ public class HEIRUCTNode extends HEIRNode{
     	}
     }
     
-    public double childValue(double parent_visit_count) {
+    public double childValue(HEIRNode parent) {
         double exploitation = ((double)accum_evaluation) / visit_count;
-        double exploration = Math.sqrt(Math.log(parent_visit_count)/visit_count);
+        double exploration = Math.sqrt(Math.log(parent.visit_count)/visit_count);
         //maximizer and minimizer UCT nodes 
-        if (uctParent.type==0) {
+        if (parent.type==0) {
             // max node:
             exploitation = (uctParent.evaluation_bound + exploitation)/(2*uctParent.evaluation_bound);
         } else {

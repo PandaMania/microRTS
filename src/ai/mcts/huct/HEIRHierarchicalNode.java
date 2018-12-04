@@ -35,10 +35,9 @@ public class HEIRHierarchicalNode extends HEIRNode{
         actionIdx = 0;
     }
 
-    public double childValue(double parent_visit_count){
+    public double childValue(HEIRNode parent){
         double exploitation = ((double)this.accum_evaluation) / this.visit_count;
-        double exploration = Math.sqrt(Math.log(parent_visit_count) / visit_count);
-        if (hParent == null)
+        double exploration = Math.sqrt(Math.log(parent.visit_count) / visit_count);
         if (type==0) {
             // max node:
             exploitation = (evaluation_bound + exploitation)/(2*evaluation_bound);
