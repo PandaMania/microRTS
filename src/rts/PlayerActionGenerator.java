@@ -247,7 +247,7 @@ public class PlayerActionGenerator {
     	Pair<Unit, List<UnitAction>> unitChoices = choices.get(unitIdx);
     	Unit u = unitChoices.m_a;
     	UnitAction ua;
-    	//If it is a null action
+    	//If the actionIdx is bigger than the last action idx by one, it is a null action
     	if (actionIdx == choiceSizes[unitIdx])
     		ua = new UnitAction(UnitAction.TYPE_NONE, 1);
     	else

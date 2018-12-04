@@ -183,7 +183,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         int mostVisitedIdx = -1;
         HEIRUCTNode mostVisited = null;
         for(int i = 0;i<tree.uctChildren.size();i++) {
-            HEIRUCTNode child = tree.uctChildren.get(i).getValue();
+            HEIRUCTNode child = tree.uctChildren.get(i);
             if (mostVisited == null || child.visit_count>mostVisited.visit_count ||
                     (child.visit_count==mostVisited.visit_count &&
                             child.accum_evaluation > mostVisited.accum_evaluation)) {
