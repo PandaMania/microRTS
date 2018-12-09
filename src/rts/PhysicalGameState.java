@@ -24,7 +24,7 @@ import rts.units.UnitTypeTable;
  *
  * @author santi
  */
-public class PhysicalGameState {
+public class  PhysicalGameState {
 
     /**
      * Indicates a free tile
