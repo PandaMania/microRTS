@@ -44,6 +44,8 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
     int MAX_TREE_DEPTH = 10;
     
     int playerForThisComputation;
+    //MASTStrategy mast;
+    MASTStrategy2 mast2;
     
     
     public UCT(UnitTypeTable utt) {
@@ -59,6 +61,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         randomAI = policy;
         MAX_TREE_DEPTH = max_depth;
         ef = a_ef;
+        mast2 = new MASTStrategy2();
     }
     
     
@@ -107,6 +110,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         gs_to_start_from = gs;
         total_runs_this_move = 0;
 //        System.out.println(evaluation_bound);
+        //mast.startNewComputation(a_player,gs);
     }    
     
     
@@ -143,18 +147,27 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
 
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
-            simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+            mast2.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            //mast.simulate(leaf,gs2.getTime()+ MAXSIMULATIONTIME);
+            //simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
 
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
 //                System.out.println(evaluation_bound + " -> " + evaluation + " -> " + (evaluation+evaluation_bound)/(evaluation_bound*2));
-
-            while(leaf!=null) {
+            UCTNode bwNode = leaf;
+            while(bwNode!=null) {
+                bwNode.accum_evaluation += evaluation;
+                bwNode.visit_count++;
+                bwNode = bwNode.parent;
+            }
+            //mast.updateHistoryQValues(player,leaf);
+            mast2.updateHistoryQValues(player,leaf);
+            /*while(leaf!=null) {
                 leaf.accum_evaluation += evaluation;
                 leaf.visit_count++;
                 leaf = leaf.parent;
-            }
+            }*/
             total_runs++;
             total_runs_this_move++;
             return evaluation;

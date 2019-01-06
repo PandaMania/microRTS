@@ -9,6 +9,7 @@ import ai.*;
 import ai.abstraction.WorkerRush;
 import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.mcts.naivemcts.NaiveMCTS;
+import ai.mcts.uct.UCT;
 import ai.scv.SCV;
 import gui.PhysicalGameStatePanel;
 import java.io.OutputStreamWriter;
@@ -34,8 +35,8 @@ public class GameVisualSimulationTest {
         int PERIOD = 20;
         boolean gameover = false;
         
-        AI ai1 = new WorkerRush(utt, new BFSPathFinding());        
-        AI ai2 = new RandomBiasedAI();
+        AI ai1 = new WorkerRush(utt, new BFSPathFinding());
+        AI ai2 = new UCT(utt);//new RandomBiasedAI();
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
 //        JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_WHITE);
