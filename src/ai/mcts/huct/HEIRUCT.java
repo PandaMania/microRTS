@@ -39,6 +39,8 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     public long total_cycles_executed = 0;
     public long total_actions_issued = 0;
 
+    public int savedTrees=0;
+    public int deadTrees=0;
     long total_runs_this_move = 0;
 
     int MAXSIMULATIONTIME = 1024;
@@ -112,20 +114,20 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
 
     public void startNewComputation(int a_player, GameState gs) throws Exception {
-           System.out.println("starting computation");
+        System.out.println("starting computation");
 
         float evaluation_bound = ef.upperBound(gs);
         playerForThisComputation = a_player;
         HEIRUCTNode newRoot= WWF(tree, gs);
         if(newRoot==null){
             tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs, null, null, evaluation_bound);
-        }else
-        tree =  copyTree(newRoot, gs);
-
-
-
             gs_to_start_from = gs;
             total_runs_this_move = 0;
+
+        }else
+        tree =  copyTree(newRoot, gs);
+            gs_to_start_from = gs;
+            total_runs_this_move = tree.visit_count;
 
 //        System.out.println(evaluation_bound);
     }
@@ -327,21 +329,24 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     public HEIRUCTNode WWF(HEIRUCTNode oldRoot, GameState current){
         HEIRUCTNode toReturn;
-        System.out.println("------------------------------------------------------");
-        System.out.println("current" + current.getPhysicalGameState());
+       // System.out.println("------------------------------------------------------");
+        //System.out.println("current" + current.getPhysicalGameState());
 
         if(oldRoot!=null) {
             for (int j = 0; j < oldRoot.uctChildren.get(0).uctChildren.size(); j++) {
-                System.out.println(oldRoot.uctChildren.get(0).uctChildren.get(j).gs.getPhysicalGameState());
-                if (oldRoot.uctChildren.get(0).uctChildren.get(j).gs.getPhysicalGameState() == current.getPhysicalGameState()) {
+               // System.out.println(oldRoot.uctChildren.get(0).uctChildren.get(j).gs.getPhysicalGameState());
+                if (compare2GameStates(oldRoot.uctChildren.get(0).uctChildren.get(j).gs,current)) {
                     toReturn = copyTree(oldRoot.uctChildren.get(0).uctChildren.get(j), current);
-                    System.out.println("we did it");
+                    savedTrees++;
+                     System.out.println("we saved " + (double) savedTrees/(savedTrees+deadTrees) + "% trees");
+
                     return  toReturn;
                 }
             }
         }
+        deadTrees++;
 
-        System.out.println("was unable to copy tree");
+        System.out.println("we saved " +(double) savedTrees/(savedTrees+deadTrees) + "% trees");
         return null;
 
 
@@ -350,7 +355,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     public HEIRUCTNode copyTree( HEIRUCTNode newRoot, GameState current){
         newRoot.uctParent=null;
         newRoot.hParent=null;
-        newRoot.gs=current;
+       // newRoot.gs=current;
         return newRoot;
     }
     public void startNewComputation( GameState gs, HEIRUCTNode oldRoot) throws Exception {
@@ -362,6 +367,56 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         gs_to_start_from = gs;
         total_runs_this_move = 0; // QUESTIONMARK
 //        System.out.println(evaluation_bound);
+    }
+
+
+
+
+    public boolean compare2GameStates(GameState one, GameState two){
+      boolean same=false;
+
+       // System.out.println("number of children = " + two.getUnits().size());
+        for(int i=0; i< one.getUnits().size();i++){
+            same=false;
+
+            for(int j=0; j<two.getUnits().size();j++){
+                if(one.getUnits().get(i).getX()==two.getUnits().get(j).getX()){
+                    if(one.getUnits().get(i).getY()==two.getUnits().get(j).getY()){
+                        if(one.getUnits().get(i).getPlayer()==two.getUnits().get(j).getPlayer()){
+                            if(one.getUnits().get(i).getResources()==two.getUnits().get(j).getResources()){
+                                if(one.getUnits().get(i).getType()==two.getUnits().get(j).getType()){
+                                    if(one.getUnits().get(i).getHitPoints()==two.getUnits().get(j).getHitPoints()){
+                                        if(one.getUnits().get(i).getMoveTime()==two.getUnits().get(j).getMoveTime()){
+                                            if(one.getUnits().get(i).getAttackTime()==two.getUnits().get(j).getAttackTime()){
+                                                if(one.getUnits().get(i).getHarvestAmount()==two.getUnits().get(j).getHarvestAmount()){
+                                                    if(one.getUnits().get(i).getCost()==two.getUnits().get(j).getCost()){
+                                                        if(one.getTime()==two.getTime()){
+
+
+
+                                                                same=true;
+
+
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            if(!same){
+               // System.out.println(1);
+                return false;
+            }
+          }
+          //System.out.println("fuck");
+    return true;
     }
 
 }
