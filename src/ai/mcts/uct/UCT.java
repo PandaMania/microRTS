@@ -46,7 +46,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
     int playerForThisComputation;
     //MASTStrategy mast;
     MASTStrategy2 mast2;
-    
+    MASTStrategy3 mast3;
     
     public UCT(UnitTypeTable utt) {
         this(100,-1,100,10,
@@ -62,6 +62,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         MAX_TREE_DEPTH = max_depth;
         ef = a_ef;
         mast2 = new MASTStrategy2();
+        mast3 = new MASTStrategy3();
     }
     
     
@@ -147,10 +148,10 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
 
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
-            mast2.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            //mast2.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             //mast.simulate(leaf,gs2.getTime()+ MAXSIMULATIONTIME);
             //simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-
+            mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
@@ -162,7 +163,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
                 bwNode = bwNode.parent;
             }
             //mast.updateHistoryQValues(player,leaf);
-            mast2.updateHistoryQValues(player,leaf);
+            //mast2.updateHistoryQValues(player,leaf);
             /*while(leaf!=null) {
                 leaf.accum_evaluation += evaluation;
                 leaf.visit_count++;

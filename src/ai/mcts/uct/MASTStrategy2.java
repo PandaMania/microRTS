@@ -2,6 +2,7 @@ package ai.mcts.uct;
 
 import ai.RandomBiasedAI;
 import ai.core.AI;
+import jdk.internal.cmm.SystemResourcePressureImpl;
 import rts.*;
 import rts.units.Unit;
 import util.Pair;
@@ -34,6 +35,7 @@ public class MASTStrategy2 {
             //try {
             if (gs.isComplete()) {
                 gameover = gs.cycle();
+
             } else {
 
                 //UNABLE TO GET ACTION ???
@@ -43,6 +45,7 @@ public class MASTStrategy2 {
 
                 gs.issue(player0Action);
                 gs.issue(player1Action);
+                System.out.println("Im cycling");
             }
             /*}catch(Exception e){
                 e.printStackTrace();
@@ -98,6 +101,7 @@ public class MASTStrategy2 {
         PhysicalGameState pgs = gs.getPhysicalGameState();
         if (!gs.canExecuteAnyAction(player)) return pa;
 
+        System.out.println("Im in getAction of player"+player);
         // Generate the reserved resources:
         for(Unit u:pgs.getUnits()) {
             UnitActionAssignment uaa = gs.getActionAssignment(u);
@@ -163,8 +167,10 @@ public class MASTStrategy2 {
                     List<ActionProbability> tmpList= new ArrayList<>();
                     for(ActionProbability ap: actionProbList){
                         if(l.contains(ap.ua)&&gs.isUnitActionAllowed(u,ap.ua)) {
-                            i++; // allowed, so use available prob
-                            tmpList.add(ap);
+                            if(checkPostGameState(pa,u,ap.ua,gs)) {
+                                i++; // allowed, so use available prob
+                                tmpList.add(ap);
+                            }
                         }
                     }
                     double[] distribution =new double[i];
@@ -206,7 +212,26 @@ public class MASTStrategy2 {
             }
         }
         System.out.println(s);
+        System.out.println("finish action");
         return  pa;
+    }
+    private boolean checkPostGameState(PlayerAction pa,Unit u,UnitAction ua,GameState gs){
+        PlayerAction pa2 = pa.clone();
+        GameState checkingGameState = gs.clone();
+        checkingGameState.issue(pa2);
+        checkingGameState.cycle();
+        System.out.println("PA: "+pa2.toString());
+        boolean  ret = false;
+        PhysicalGameState pgs = checkingGameState.getPhysicalGameState();
+
+        System.out.println("Position of all units ");
+        for(Unit check:    checkingGameState.getUnits())
+        {
+            System.out.println(check.toString());
+        }
+        ret = checkingGameState.isUnitActionAllowed(u,ua);
+        System.out.println("Result of checking unit"+u.getID()+" do action "+ua.toString()+": "+ret);
+        return ret;
     }
 
     private boolean IsActionUnitContainedInList(List<ActionProbability> actionProbList,UnitAction ua){
