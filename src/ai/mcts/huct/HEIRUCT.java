@@ -25,6 +25,7 @@ import ai.core.InterruptibleAI;
 public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI {
     public static int DEBUG = 0;
     EvaluationFunction ef = null;
+    public boolean saveTheTrees=false;
 
     Random r = new Random();
     AI randomAI = new RandomBiasedAI();
@@ -93,28 +94,51 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     public PlayerAction getAction(int player, GameState gs) throws Exception
     {
+       /* if(saveTheTrees) {
 
+            if (gs.canExecuteAnyAction(player)) {
+                if (tree == null) {
+                    startNewComputation(player, gs.clone());
+                    computeDuringOneGameFrame();
+                    return getBestActionSoFar();
+                } else {
+                    startNewComputation(gs.clone(), tree);
+                    computeDuringOneGameFrame();
+                    return getBestActionSoFar();
+                }
+            } else {
+                return new PlayerAction();
+            }
 
+        }
+        else{*/
         if (gs.canExecuteAnyAction(player)) {
-            if(tree==null){
-                startNewComputation(player,gs.clone());
+                startNewComputationNoSave(player, gs.clone());
                 computeDuringOneGameFrame();
                 return getBestActionSoFar();
-            } else{
-                startNewComputation(gs.clone(),tree);
-                computeDuringOneGameFrame();
-                return getBestActionSoFar();
-                }
-        } else{
+
+        }else {
             return new PlayerAction();
-                }
+        }
+    }
+    //}
 
 
+    public void startNewComputationNoSave(int a_player, GameState gs) throws Exception {
+        //   System.out.println("starting computation");
+
+        float evaluation_bound = ef.upperBound(gs);
+        playerForThisComputation = a_player;
+            tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs, null, null, evaluation_bound);
+            gs_to_start_from = gs;
+            total_runs_this_move = 0;
+
+//        System.out.println(evaluation_bound);
     }
 
 
     public void startNewComputation(int a_player, GameState gs) throws Exception {
-        System.out.println("starting computation");
+     //   System.out.println("starting computation");
 
         float evaluation_bound = ef.upperBound(gs);
         playerForThisComputation = a_player;
@@ -338,7 +362,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
                 if (compare2GameStates(oldRoot.uctChildren.get(0).uctChildren.get(j).gs,current)) {
                     toReturn = copyTree(oldRoot.uctChildren.get(0).uctChildren.get(j), current);
                     savedTrees++;
-                     System.out.println("we saved " + (double) savedTrees/(savedTrees+deadTrees) + "% trees");
+                   //  System.out.println("we saved " + (double) savedTrees/(savedTrees+deadTrees) + "% trees");
 
                     return  toReturn;
                 }
@@ -346,7 +370,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         }
         deadTrees++;
 
-        System.out.println("we saved " +(double) savedTrees/(savedTrees+deadTrees) + "% trees");
+       // System.out.println("we saved " +(double) savedTrees/(savedTrees+deadTrees) + "% trees");
         return null;
 
 
@@ -374,7 +398,9 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     public boolean compare2GameStates(GameState one, GameState two){
       boolean same=false;
-
+        if(one.getTime()!=two.getTime()){
+            return false;
+        }
        // System.out.println("number of children = " + two.getUnits().size());
         for(int i=0; i< one.getUnits().size();i++){
             same=false;
@@ -390,14 +416,9 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
                                             if(one.getUnits().get(i).getAttackTime()==two.getUnits().get(j).getAttackTime()){
                                                 if(one.getUnits().get(i).getHarvestAmount()==two.getUnits().get(j).getHarvestAmount()){
                                                     if(one.getUnits().get(i).getCost()==two.getUnits().get(j).getCost()){
-                                                        if(one.getTime()==two.getTime()){
-
-
 
                                                                 same=true;
 
-
-                                                        }
                                                     }
                                                 }
                                             }
