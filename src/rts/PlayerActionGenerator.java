@@ -18,6 +18,7 @@ public class PlayerActionGenerator {
     PhysicalGameState physicalGameState;
     ResourceUsage base_ru;
     List<Pair<Unit,List<UnitAction>>> choices;
+	List<Unit> enemyUnits;
     PlayerAction lastAction = null;
     long size = 1;  // this will be capped at Long.MAX_VALUE;
     long generated = 0;
@@ -74,8 +75,9 @@ public class PlayerActionGenerator {
 				base_ru.merge(ru);
 			}
 		}
-        
+		enemyUnits = new ArrayList<>();
         choices = new ArrayList<>();
+        int enemyID = pID ==1?0:1;
 		for (Unit u : physicalGameState.getUnits()) {
 			if (u.getPlayer() == pID) {
 				if (gameState.unitActions.get(u) == null) {
@@ -91,6 +93,8 @@ public class PlayerActionGenerator {
 					// System.out.println("size = " + size);
 				}
 			}
+			else if( u.getPlayer() == enemyID )
+				enemyUnits.add(u);
 		}
 		// System.out.println("---");
 
@@ -125,6 +129,45 @@ public class PlayerActionGenerator {
 				choice.m_b.add(tmp.remove(r.nextInt(tmp.size())));
 		}
 	}
+
+	public void DangerBasedOrder() {
+    	int i = 0;
+    	List<Integer> indeces = new ArrayList<>();
+		List<Pair<Unit, List<UnitAction>>> tmp = new ArrayList<>();
+		for (Pair<Unit, List<UnitAction>> choice : choices) {
+			int x = choice.m_a.getX();
+			int y = choice.m_a.getY();
+			for (Unit enemyUnit : enemyUnits) {
+				if (checkNeighbour(enemyUnit.getX(), enemyUnit.getY(), x, y)){
+					tmp.add(choice);
+					indeces.add(i);
+					break;
+				}
+			}
+			i++;
+		}
+		int a =0;
+		if(indeces.size() !=0 && indeces.get(indeces.size()-1)>=choices.size())
+			a = 2;
+		for(int index : indeces)
+			choices.remove(index);
+		tmp.addAll(choices);
+		choices = tmp;
+	}
+
+	boolean checkNeighbour(int x, int y, int otherX, int otherY){
+    	if(x-1 == otherX && y-1 == otherY)
+    		return true;
+		if(x-1 == otherX && y == otherY)
+			return true;
+		if(x == otherX && y-1 == otherY)
+			return true;
+		if(x == otherX && y == otherY)
+			return true;
+
+		return false;
+	}
+
     
     /**
      * Increases the index that tracks the next action to be returned

@@ -50,6 +50,7 @@ public class HEIRUCTNode extends HEIRNode{
 //            actions = gs.getPlayerActions(maxplayer);
 
             moveGenerator = new PlayerActionGenerator(a_gs, maxplayer);
+
             moveGenerator.randomizeOrder();
             actions = new ArrayList<>();
             uctChildren = new ArrayList<HEIRUCTNode>();
@@ -66,6 +67,7 @@ public class HEIRUCTNode extends HEIRNode{
 //            actions = gs.getPlayerActions(minplayer);
             moveGenerator = new PlayerActionGenerator(a_gs, minplayer);
             moveGenerator.randomizeOrder();
+            moveGenerator.DangerBasedOrder();
             actions = new ArrayList<>();
             uctChildren = new ArrayList<HEIRUCTNode>();
             hChildren = new ArrayList<HEIRHierarchicalNode>();
