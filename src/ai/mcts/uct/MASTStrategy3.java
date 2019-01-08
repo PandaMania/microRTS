@@ -4,6 +4,7 @@ import rts.*;
 import rts.units.Unit;
 import util.Sampler;
 
+import javax.sound.midi.SysexMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +29,7 @@ public class MASTStrategy3 {
                 gameover = gs.cycle();
 
             } else {
-
+                System.out.println("gs time before getting Action: "+gs.getTime());
                 //UNABLE TO GET ACTION ???
                 //GET PLAYER_ACTION REQUIRED <UNIT,UNIT_ACTION>
                 PlayerAction player0Action = getAction(0, gs);
@@ -37,7 +38,7 @@ public class MASTStrategy3 {
                 gs.issue(player0Action);
                 gs.issue(player1Action);
                 gsList.add(gs);
-                System.out.println("Im cycling");
+                //System.out.println("Im cycling");
             }
         }while(!gameover && gs.getTime()<time);
 
@@ -46,8 +47,8 @@ public class MASTStrategy3 {
     }
     public void updateQvalues(boolean gameover,List<GameState> gsList){
         if(gameover){
-            for(int j=gsList.size()-1;j>=0;j--){
-                GameState gs = gsList.get(j);
+            for(int i=gsList.size()-1;i>=0;i--){
+                GameState gs = gsList.get(i);
                 List<Unit> unitList= gs.getUnits();
                 for(Unit u : unitList){
                     HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
@@ -73,7 +74,7 @@ public class MASTStrategy3 {
         PhysicalGameState pgs = gs.getPhysicalGameState();
         if (!gs.canExecuteAnyAction(player)) return pa;
 
-        System.out.println("Im in getAction of player" + player);
+        //System.out.println("Im in getAction of player" + player);
         // Generate the reserved resources:
         for (Unit u : pgs.getUnits()) {
             UnitActionAssignment uaa = gs.getActionAssignment(u);
@@ -82,12 +83,19 @@ public class MASTStrategy3 {
                 pa.getResourceUsage().merge(ru);
             }
         }
-
+        checkingGameState = gs.clone();
+        String s="\nplayer"+player+"\n";
         for(Unit u:pgs.getUnits()) {
             if (u.getPlayer() == player) {
                 if (gs.getActionAssignment(u) == null) {
+                    s+= "\nunitId:"+u.getID()+"\t|"+u.getX()+","+u.getY()+"\t|"+u.getType().name;
                     UnitAction none = new UnitAction(UnitAction.TYPE_NONE, 10);
                     List<UnitAction> l = u.getUnitActions(gs);
+                    s+= "\n\tListActions:";
+                    for(UnitAction ua:l) {
+                        s += ua.toString() + "\t";
+                    }
+                    s+= "\n\tAvaiActions:";
                     for(UnitAction a:l) {
                         if (a.getType()==UnitAction.TYPE_NONE) {
                             none = a;
@@ -120,7 +128,8 @@ public class MASTStrategy3 {
                     List<ActionQvalue> tmpList= new ArrayList<>();
                     for(ActionQvalue ap: actionQvalueList){
                         if(l.contains(ap.ua)&&gs.isUnitActionAllowed(u,ap.ua)) {
-                            if(checkPostGameState(pa,u,ap.ua,gs)) {
+                            //if(checkPostGameState(pa,u,ap.ua,gs)) {
+                            if(checkingGameState.isUnitActionAllowed(u,ap.ua)){
                                 i++; // allowed, so use available prob
                                 tmpList.add(ap);
                             }
@@ -130,8 +139,10 @@ public class MASTStrategy3 {
                     i=0;
                     for(ActionQvalue aqv:tmpList){
                         distribution[i] = gibbsSampling(aqv,tmpList);
+                        s+= aqv.ua.toString()+"\t";
                         i++;
                     }
+                    s+="\n";
                     try{
                         //extract to player action
                         ActionQvalue selectedAp =  tmpList.get(Sampler.weighted(distribution));
@@ -141,9 +152,13 @@ public class MASTStrategy3 {
                             ResourceUsage ru = ua.resourceUsage(u, pgs);
                             pa.getResourceUsage().merge(ru);
                             pa.addUnitAction(u, ua);
+
                         } else {
                             pa.addUnitAction(u, none);
                         }
+
+                        ua.execute(u,checkingGameState);
+                        s +="\t|chosenAction:"+ua.toString()+"\t";
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         System.out.println("unitId"+u.getID()+" performs null move");
@@ -152,6 +167,7 @@ public class MASTStrategy3 {
                 }
             }
         }
+        System.out.println(s);
         return pa;
     }
     private double gibbsSampling(ActionQvalue aqv, List<ActionQvalue> aqvList){
@@ -165,12 +181,12 @@ public class MASTStrategy3 {
         probability = Math.exp(aqv.qvalue) / expTotal;
         return  probability;
     }
+    GameState checkingGameState =null;
     private boolean checkPostGameState(PlayerAction pa,Unit u,UnitAction ua,GameState gs){
-        PlayerAction pa2 = pa.clone();
-        GameState checkingGameState = gs.clone();
-        checkingGameState.issue(pa2);
-        checkingGameState.cycle();
-        System.out.println("PA: "+pa2.toString());
+        //PlayerAction pa2 = pa.clone();
+        //checkingGameState.issue(pa2);
+        //checkingGameState.cycle();
+        //System.out.println("PA: "+pa2.toString());
         boolean  ret = false;
         PhysicalGameState pgs = checkingGameState.getPhysicalGameState();
 
