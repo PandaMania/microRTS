@@ -2,6 +2,7 @@ package ai.mcts.uct;
 
 import rts.*;
 import rts.units.Unit;
+import rts.units.UnitTypeTable;
 import util.Sampler;
 
 import javax.sound.midi.SysexMessage;
@@ -29,15 +30,25 @@ public class MASTStrategy3 {
                 gameover = gs.cycle();
 
             } else {
-                System.out.println("gs time before getting Action: "+gs.getTime());
+                System.out.println("@@@@@@@@@@@@@@@@@gs time before getting Action: "+gs.getTime()+"@@@@@@@@");
+                List<Unit> l = gs.getUnits();
+                for(Unit u:l){
+                    System.out.println(u.toString());
+                }
                 //UNABLE TO GET ACTION ???
                 //GET PLAYER_ACTION REQUIRED <UNIT,UNIT_ACTION>
                 PlayerAction player0Action = getAction(0, gs);
                 PlayerAction player1Action = getAction(1, gs);
-
+                System.out.println("@@@@@@@@@@@@@@@@@gs time after getting Action: "+gs.getTime()+"@@@@@@@@");
+                l = gs.getUnits();
+                for(Unit u:l){
+                    System.out.println(u.toString());
+                }
                 gs.issue(player0Action);
                 gs.issue(player1Action);
                 gsList.add(gs);
+
+
                 //System.out.println("Im cycling");
             }
         }while(!gameover && gs.getTime()<time);
@@ -129,7 +140,7 @@ public class MASTStrategy3 {
                     for(ActionQvalue ap: actionQvalueList){
                         if(l.contains(ap.ua)&&gs.isUnitActionAllowed(u,ap.ua)) {
                             //if(checkPostGameState(pa,u,ap.ua,gs)) {
-                            if(checkingGameState.isUnitActionAllowed(u,ap.ua)){
+                            if(checkingGameState.isUnitActionAllowed(u,ap.ua)){ // do not filter enough to get avai actions
                                 i++; // allowed, so use available prob
                                 tmpList.add(ap);
                             }
@@ -157,7 +168,8 @@ public class MASTStrategy3 {
                             pa.addUnitAction(u, none);
                         }
 
-                        ua.execute(u,checkingGameState);
+                        //ua.execute(u,checkingGameState);
+                        checkingGameState=checkingGameState.cloneIssue(pa);
                         s +="\t|chosenAction:"+ua.toString()+"\t";
                     } catch (Exception ex) {
                         ex.printStackTrace();
