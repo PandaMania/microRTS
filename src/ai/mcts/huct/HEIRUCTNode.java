@@ -21,6 +21,9 @@ import rts.PlayerActionGenerator.childInfo;
  */
 public class HEIRUCTNode extends HEIRNode{
     public GameState gs;
+    public HEIRUCT hu;
+
+    public int fuckyoucounter=0;
     int depth = 0;  // the depth in the tree
 
     boolean hasMoreActions = true;
@@ -85,7 +88,7 @@ public class HEIRUCTNode extends HEIRNode{
     public HEIRUCTNode UCTSelectLeaf(int maxplayer, int minplayer, long cutOffTime, int max_depth) throws Exception {
 
         // Cut the tree policy at a predefined depth
-        if (depth>=max_depth) return this;
+        if (depth>=max_depth+fuckyoucounter) return this;
 
         // if non visited children, visit:
         if (type == 0)
@@ -145,7 +148,7 @@ public class HEIRUCTNode extends HEIRNode{
             }
             else {
             	node = (HEIRUCTNode) getBestChild(HNode, false);
-            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
+            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth+fuckyoucounter);
             }
         }
         else {
@@ -161,7 +164,7 @@ public class HEIRUCTNode extends HEIRNode{
             }
             else {
             	node = (HEIRUCTNode) getBestChild(this, false);
-            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
+            	return node.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth+fuckyoucounter);
             }
         }
     }
@@ -220,9 +223,9 @@ public class HEIRUCTNode extends HEIRNode{
         HEIRUCTNode mostVisited = null;
         for(int i = 0;i<uctChildren.size();i++) {
             HEIRUCTNode child = uctChildren.get(i);
-            for(int j = 0;j<depth;j++) System.out.print("    ");
+            for(int j = 0;j<depth+fuckyoucounter;j++) System.out.print("    ");
             System.out.println("child explored " + child.visit_count + " Avg evaluation: " + (child.accum_evaluation/((double)child.visit_count)) + " : " + actions.get(i));
-            if (depth<maxdepth) child.showNode(depth+1,maxdepth);
+            if (depth<maxdepth+fuckyoucounter) child.showNode(depth+1,maxdepth+fuckyoucounter);
         }
     }
 
