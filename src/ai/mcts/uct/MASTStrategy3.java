@@ -2,13 +2,17 @@ package ai.mcts.uct;
 
 import rts.*;
 import rts.units.Unit;
+import rts.units.UnitType;
 import rts.units.UnitTypeTable;
+import util.Pair;
 import util.Sampler;
 
 import javax.sound.midi.SysexMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static rts.UnitAction.*;
 
 public class MASTStrategy3 {
     private static final double DEFAULT_Q_VALUE = 1;
@@ -21,13 +25,19 @@ public class MASTStrategy3 {
         //player 1
         actionQvaluePerUnitMapList.add(new HashMap<>());
 
+        produceActionGSTimeList = new ArrayList<>();
     }
+    private int simulationTimes = 0;
     public void simulate(GameState gs, int time){
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%simulationTimes ="+simulationTimes+" at time = "+time+"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        simulationTimes++;
+        //produceActionGSTimeList.clear();
+
         List<GameState> gsList = new ArrayList<>();
         boolean gameover = false;
         do{
             if (gs.isComplete()) {
-                gameover = gs.cycle();
+                gameover = gs.simulate();//cycle();
 
             } else {
                 System.out.println("@@@@@@@@@@@@@@@@@gs time before getting Action: "+gs.getTime()+"@@@@@@@@");
@@ -62,18 +72,20 @@ public class MASTStrategy3 {
                 GameState gs = gsList.get(i);
                 List<Unit> unitList= gs.getUnits();
                 for(Unit u : unitList){
-                    HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
-                    if(actionQvaluePerUnitMap.containsKey(u.getID())){
-                        List<ActionQvalue> actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
-                        UnitAction selectedUA = gs.getUnitAction(u);
-                        for(ActionQvalue aqv : actionQvalueList){
-                            if(aqv.equalsUnitAction(selectedUA)){
-                                boolean isWin = (gs.winner() == u.getPlayer());
-                                aqv.qvalue = aqv.qvalue * (1- DISCOUNT_FACTOR) + (isWin?1:0) *DISCOUNT_FACTOR;
-                                break;
+                    if(u.getPlayer() >= 0) {
+                        HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
+                        if (actionQvaluePerUnitMap.containsKey(u.getID())) {
+                            List<ActionQvalue> actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
+                            UnitAction selectedUA = gs.getUnitAction(u);
+                            for (ActionQvalue aqv : actionQvalueList) {
+                                if (aqv.equalsUnitAction(selectedUA)) {
+                                    boolean isWin = (gs.winner() == u.getPlayer());
+                                    aqv.qvalue = aqv.qvalue * (1 - DISCOUNT_FACTOR) + (isWin ? 1 : 0) * DISCOUNT_FACTOR;
+                                    break;
+                                }
                             }
-                        }
 
+                        }
                     }
                 }
             }
@@ -107,12 +119,12 @@ public class MASTStrategy3 {
                         s += ua.toString() + "\t";
                     }
                     s+= "\n\tAvaiActions:";
-                    for(UnitAction a:l) {
+                    /*for(UnitAction a:l) {
                         if (a.getType()==UnitAction.TYPE_NONE) {
                             none = a;
                             break;
                         }
-                    }
+                    }*/
                     List<ActionQvalue> actionQvalueList = null;
                     if(actionQvaluePerUnitMap.containsKey(u.getID())){
                         actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
@@ -139,13 +151,13 @@ public class MASTStrategy3 {
                     List<ActionQvalue> tmpList= new ArrayList<>();
                     for(ActionQvalue ap: actionQvalueList){
                         if(l.contains(ap.ua)&&gs.isUnitActionAllowed(u,ap.ua)) {
-                            //if(checkPostGameState(pa,u,ap.ua,gs)) {
-                            if(checkingGameState.isUnitActionAllowed(u,ap.ua)){ // do not filter enough to get avai actions
+                            if(checkPostGameState(u,ap.ua)) { // do not filter enough to get avai actions
                                 i++; // allowed, so use available prob
                                 tmpList.add(ap);
                             }
                         }
                     }
+
                     double[] distribution =new double[i];
                     i=0;
                     for(ActionQvalue aqv:tmpList){
@@ -155,21 +167,46 @@ public class MASTStrategy3 {
                     }
                     s+="\n";
                     try{
-                        //extract to player action
-                        ActionQvalue selectedAp =  tmpList.get(Sampler.weighted(distribution));
 
-                        UnitAction ua = selectedAp.ua;
+                        //extract to player action
+                        ActionQvalue selectedAp = null;
+                        UnitAction ua = null;
+                        if(tmpList.isEmpty()){
+                            ua= none;
+                        }
+                        else {
+                            selectedAp = tmpList.get(Sampler.weighted(distribution));
+                            ua= selectedAp.ua;
+                        }
                         if (ua.resourceUsage(u, pgs).consistentWith(pa.getResourceUsage(), gs)) {
                             ResourceUsage ru = ua.resourceUsage(u, pgs);
                             pa.getResourceUsage().merge(ru);
                             pa.addUnitAction(u, ua);
-
+                            if(ua.getType() == TYPE_PRODUCE ){
+                                boolean found = false;
+                                ProduceSituation newps = new ProduceSituation(u,ua,gs.getTime());
+                                for(ProduceSituation ps: produceActionGSTimeList){
+                                    if(ps.x == newps.x && ps.y == newps.y){
+                                        found  = true;
+                                        break;
+                                    }
+                                }
+                                if(!found)
+                                    produceActionGSTimeList.add(newps);
+                            }
                         } else {
                             pa.addUnitAction(u, none);
                         }
 
                         //ua.execute(u,checkingGameState);
-                        checkingGameState=checkingGameState.cloneIssue(pa);
+                        System.out.println("checking game state informationnnnnnnnnnnnnnn");
+                        checkingGameState= gs.clone(); // <= error | you have to find a function can clone gamestate or a unittypetable
+                        ua.execute(checkingGameState.getUnit(u.getID()),checkingGameState); // <- it affects original game state
+                        //ua.execute();
+                        List<Unit> temppppp = checkingGameState.getUnits();
+                        for(Unit uee:temppppp){
+                            System.out.println(uee.toString());
+                        }
                         s +="\t|chosenAction:"+ua.toString()+"\t";
                     } catch (Exception ex) {
                         ex.printStackTrace();
@@ -182,6 +219,10 @@ public class MASTStrategy3 {
         System.out.println(s);
         return pa;
     }
+
+    List<ProduceSituation> produceActionGSTimeList;
+    HashMap<Integer,List<UnitAction>> produceActionMap;
+
     private double gibbsSampling(ActionQvalue aqv, List<ActionQvalue> aqvList){
         double probability = 0;
 
@@ -194,21 +235,51 @@ public class MASTStrategy3 {
         return  probability;
     }
     GameState checkingGameState =null;
-    private boolean checkPostGameState(PlayerAction pa,Unit u,UnitAction ua,GameState gs){
+    private boolean checkPostGameState(Unit u,UnitAction ua){
         //PlayerAction pa2 = pa.clone();
         //checkingGameState.issue(pa2);
         //checkingGameState.cycle();
         //System.out.println("PA: "+pa2.toString());
-        boolean  ret = false;
-        PhysicalGameState pgs = checkingGameState.getPhysicalGameState();
 
-        System.out.println("Position of all units ");
-        for(Unit check:    checkingGameState.getUnits())
-        {
-            System.out.println(check.toString());
+        boolean  ret = checkingGameState.isUnitActionAllowed(u,ua);
+        if(ret){
+            if(!produceActionGSTimeList.isEmpty()) {
+                int currTime = checkingGameState.getTime();
+                List<ProduceSituation> removedList = new ArrayList<>();
+                for (ProduceSituation ps : produceActionGSTimeList) {
+                    /*int oldGsTime = ps.gsTime;
+                    if(currTime - oldGsTime > ps.ua.getUnitType().produceTime){
+                        removedList.add(ps);
+                    }
+                    else*/
+                    System.out.println("Produce situation: ("+ps.x+","+ps.y+")");
+                    {
+
+                        //available produce
+
+                        GameState gs2 =checkingGameState.clone();
+                        Unit finalCheckingUnit = gs2.getUnit(u.getID());
+                        boolean temp = finalCheckingUnit.canExecuteAction(ua,gs2);
+                        if(!temp)
+                            return false;
+                        else {
+                            ua.execute(finalCheckingUnit, gs2);
+                            if (ps.x == finalCheckingUnit.getX() && ps.y == finalCheckingUnit.getY()) {
+                                return false;
+                            }
+                        }
+
+                    }
+                }
+                /*if(!removedList.isEmpty()){
+                    for(ProduceSituation removedPs : removedList){
+                        this.produceActionGSTimeList.remove(removedPs);
+                    }
+                }*/
+            }
+
+
         }
-        ret = checkingGameState.isUnitActionAllowed(u,ua);
-        System.out.println("Result of checking unit"+u.getID()+" do action "+ua.toString()+": "+ret);
         return ret;
     }
     private boolean IsActionUnitContainedInList(List<ActionQvalue> actionQvalueList,UnitAction ua){
@@ -233,6 +304,32 @@ public class MASTStrategy3 {
         }
         public boolean equalsUnitAction(UnitAction checkedUa){
             return ua.equals(checkedUa);
+        }
+    }
+
+    private class ProduceSituation{
+        public int x;
+        public int y;
+        public Unit u;
+        public UnitAction ua;
+        public int gsTime;
+
+        public  ProduceSituation(Unit u,UnitAction ua,int gsTime){
+            this.gsTime = gsTime;
+            this.ua = ua;
+            this.u = u;
+            int targetx = u.getX();
+            int targety = u.getY();
+            int parameter = ua.getDirection();
+            switch(parameter) {
+                case DIRECTION_UP:      targety--; break;
+                case DIRECTION_RIGHT:   targetx++; break;
+                case DIRECTION_DOWN:    targety++; break;
+                case DIRECTION_LEFT:    targetx--; break;
+            }
+            x = targetx;
+            y = targety;
+
         }
     }
 }
