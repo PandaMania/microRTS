@@ -133,26 +133,53 @@ public class PlayerActionGenerator {
 	public void DangerBasedOrder() {
     	int i = 0;
     	List<Integer> indeces = new ArrayList<>();
-		List<Pair<Unit, List<UnitAction>>> tmp = new ArrayList<>();
+
+		List<Pair<Unit, List<UnitAction>>> tmp1 = new ArrayList<>();
+		List<Pair<Unit, List<UnitAction>>> tmp2 = new ArrayList<>();
+		List<Pair<Unit, List<UnitAction>>> tmp3 = new ArrayList<>();
+
+		boolean isRes;
+
 		for (Pair<Unit, List<UnitAction>> choice : choices) {
+			isRes = false;
+
+			if(choice.m_a.getResources() == 1)
+			{
+				isRes = true;
+			}
+
 			int x = choice.m_a.getX();
 			int y = choice.m_a.getY();
 			for (Unit enemyUnit : enemyUnits) {
 				if (checkNeighbour(enemyUnit.getX(), enemyUnit.getY(), x, y)){
-					tmp.add(choice);
-					indeces.add(i);
+					if(isRes){
+						tmp1.add(choice);
+						indeces.add(i);
+						isRes = false;
+					}else {
+					tmp2.add(choice);
+						indeces.add(i);
+						isRes = false;
+					}
 					break;
 				}
 			}
+			if(isRes){
+				tmp3.add(choice);
+				indeces.add(i);
+			}
 			i++;
 		}
-		int a =0;
-		if(indeces.size() !=0 && indeces.get(indeces.size()-1)>=choices.size())
-			a = 2;
-		for(int index : indeces)
-			choices.remove(index);
-		tmp.addAll(choices);
-		choices = tmp;
+
+		int correction = 0;
+		for(int index : indeces){
+			choices.remove(index - correction);
+			correction++;
+		}
+		tmp1.addAll(tmp2);
+		tmp1.addAll(tmp3);
+		tmp1.addAll(choices);
+		choices = tmp1;
 	}
 
 	boolean checkNeighbour(int x, int y, int otherX, int otherY){
