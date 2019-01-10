@@ -45,6 +45,10 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     int MAXSIMULATIONTIME = 1024;
     int MAX_TREE_DEPTH = 12;
+    boolean SAVING;
+    boolean PLAYOUT;
+    boolean ORDERED;
+
 
     int playerForThisComputation;
 
@@ -63,6 +67,19 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         MAX_TREE_DEPTH = max_depth;
         ef = a_ef;
     }
+
+    public HEIRUCT(int available_time, int max_playouts, int lookahead, int max_depth, AI policy, EvaluationFunction a_ef, boolean ordered, boolean saving, boolean playout) {
+        super(available_time, max_playouts);
+        MAXSIMULATIONTIME = lookahead;
+        randomAI = policy;
+        MAX_TREE_DEPTH = max_depth;
+        ef = a_ef;
+        PLAYOUT=playout;
+        SAVING=saving;
+        ORDERED=ordered;
+
+    }
+
 
 
     public String statisticsString() {
