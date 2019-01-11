@@ -35,7 +35,7 @@ public class GameVisualSimulationTest {
         int PERIOD = 20;
         boolean gameover = false;
         
-        AI ai1 = new WorkerRush(utt, new BFSPathFinding());
+        AI ai1 = new RandomBiasedAI(utt);// new WorkerRush(utt, new BFSPathFinding());
         AI ai2 = new UCT(utt);//new RandomBiasedAI();
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
