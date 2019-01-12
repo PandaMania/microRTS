@@ -1,5 +1,7 @@
 package ai.mcts.uct;
 
+import ai.core.AI;
+import ai.core.ParameterSpecification;
 import ai.montecarlo.lsi.Sampling;
 import rts.*;
 import rts.units.Unit;
@@ -11,7 +13,7 @@ import java.util.*;
 
 import static rts.UnitAction.*;
 
-public class MASTStrategy4 {
+public class MASTStrategy4 extends AI {
 
     private static final double DEFAULT_Q_VALUE = 1;
     public static final double DISCOUNT_FACTOR = 0.1f;
@@ -30,8 +32,21 @@ public class MASTStrategy4 {
         produceSituationList = new ArrayList<>();
     }
     public void simulate(GameState gs, int time){
-        List<GameState> gsList = new ArrayList<>();
+        //List<GameState> gsList = new ArrayList<>();
         boolean gameover = false;
+
+        for(Unit u : gs.getUnits()){
+            if(u.getPlayer() >=0) {
+                HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
+                if (actionQvaluePerUnitMap.isEmpty())
+                    break;
+                if (!actionQvaluePerUnitMap.containsKey(u.getID())) {
+                    actionQvaluePerUnitMap.remove(u.getID());
+
+                }
+            }
+        }
+
         do{
 
             if (gs.isComplete()) {
@@ -57,7 +72,7 @@ public class MASTStrategy4 {
 
                 gs.issue(player0Action);
                 gs.issue(player1Action);
-                gsList.add(gs.clone());
+                //gsList.add(gs.clone());
 
                 /*positionsUsed =gs.getResourceUsage().getPositionsUsed();
                 System.out.println("After -Resource usage ");
@@ -66,12 +81,41 @@ public class MASTStrategy4 {
                 }
                 System.out.println("**********************************END**********************************************");*/
             }
-        }while(!gameover && gs.getTime()<1500);
+        }while(!gameover && gs.getTime()<3000);
 
 
 
-        updateQvalues(gameover,gs.winner(),gsList);
+        //updateQvalues(gameover,gs.winner(),gsList);
+        updateQvalues(gameover,gs);
+    }
+    public void updateQvalues(boolean gameover,GameState gameState){
+        if(gameover){
+            int winner = gameState.winner();
+            for(int i=0;i<2;i++){
+                List<PlayerAction> paList =gameState.getPlayerActions(i);
+                HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(i);
+                for(PlayerAction pa: paList){
+                    List<Pair<Unit,UnitAction>> pairs = pa.getActions();
+                    for(Pair<Unit,UnitAction> pair:pairs){
+                        Unit u = pair.m_a;
+                        UnitAction selectedUA = pair.m_b;
+                        if (actionQvaluePerUnitMap.containsKey(u.getID())) {
+                            List<ActionQvalue> actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
+                            if(selectedUA != null) {
+                                for (ActionQvalue aqv : actionQvalueList) {
+                                    if (aqv.equalsUnitAction(selectedUA)) {
+                                        boolean isWin = (winner == u.getPlayer());
 
+                                        aqv.qvalue = aqv.qvalue * (1 - DISCOUNT_FACTOR) + (isWin ? 1.0f : 0) * DISCOUNT_FACTOR;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     public void updateQvalues(boolean gameover,int winner,List<GameState> gsList){
         if(gameover){
@@ -99,6 +143,19 @@ public class MASTStrategy4 {
                     }
                 }
             }
+            /*for(int i=0;i<actionQvaluePerUnitMapList.size();i++){
+                HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(i);
+                Set<Map.Entry<Long,List<ActionQvalue>>> set = actionQvaluePerUnitMap.entrySet();
+                String debug = "";
+                for(Map.Entry<Long,List<ActionQvalue>> entry:set){
+                    List<ActionQvalue> temp = entry.getValue();
+                    debug ="Unit"+entry.getKey()+": ";
+                    for(ActionQvalue aqv: temp){
+                        debug+= aqv.ua.toString()+":"+aqv.qvalue+"|\t";
+                    }
+                    System.out.println(debug);
+                }
+            }*/
         }
     }
     private class ActionQvalue{
@@ -114,6 +171,13 @@ public class MASTStrategy4 {
             return ua.equals(checkedUa);
         }
     }
+
+
+    @Override
+    public void reset() {
+
+    }
+
     public PlayerAction getAction(int player, GameState gameState){
         if (!gameState.canExecuteAnyAction(player) || gameState.winner()!= -1) {
             return new PlayerAction();
@@ -173,7 +237,13 @@ public class MASTStrategy4 {
                     List<Integer> positionsUsed =base_ru.getPositionsUsed();
                     for(ActionQvalue aqv : actionQvalueList){
 
-                        if(isUnitActionAllowed(gameState,u,aqv.ua)){// gameState.isUnitActionAllowed(u,aqv.ua)){
+                        if(isUnitActionAllowed(gameState,u,aqv.ua)) {// gameState.isUnitActionAllowed(u,aqv.ua)){
+                            /*if (TryToCheckByOtherWay(base_ru, gameState, u, aqv.ua))
+                            {
+                                avaiActionList.add(aqv);
+                            }*/
+
+
                             if(!positionsUsed.isEmpty()) {
                                 boolean consistent = true;
                                 for (Integer pos : positionsUsed) {
@@ -211,7 +281,6 @@ public class MASTStrategy4 {
                             }else{
                                 avaiActionList.add(aqv);
                             }
-
 
                         }
                     }
@@ -257,6 +326,64 @@ public class MASTStrategy4 {
         }
         return playerAction;
     }
+
+
+    private boolean TryToCheckByOtherWay(ResourceUsage base_ru, GameState gameState, Unit unit, UnitAction ua) {
+
+        Unit checkUnit = unit;
+        if (checkUnit==null) {
+            return false;
+        }
+
+        if (!checkUnit.canExecuteAction(ua, gameState)) {
+            return  false;
+        }
+        PhysicalGameState pgs = gameState.getPhysicalGameState();
+        // get the unit that corresponds to that action (since the state might have been cloned):
+        List<Unit> unitList= pgs.getUnits();
+        if (unitList.indexOf(checkUnit)==-1) {
+            boolean found = false;
+            for(Unit u:unitList) {
+                if (u.getClass()==checkUnit.getClass() &&
+//                        u.getID() == p.m_a.getID()) {
+                        u.getX()==checkUnit.getX() &&
+                        u.getY()==checkUnit.getY()) {
+                    checkUnit = u;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+
+
+            // check to see if the action is legal!
+            ResourceUsage ru = ua.resourceUsage(checkUnit, pgs);
+            for(int position:ru.getPositionsUsed()) {
+                int y = position/pgs.getWidth();
+                int x = position%pgs.getWidth();
+                if (pgs.getTerrain(x, y) != PhysicalGameState.TERRAIN_NONE ||
+                        pgs.getUnitAt(x, y) != null) {
+                    return false;
+                }
+            }
+
+            Player p = gameState.getPlayer(unit.getPlayer());
+        if ( ua.getType() == UnitAction.TYPE_PRODUCE && p.getResources() < ua.getUnitType().cost) {
+            return false;
+        }
+        PlayerAction pa = new PlayerAction();
+        pa.getResourceUsage().merge(base_ru.clone());
+        //pa.getResourceUsage().merge(ru);
+        //pa.addUnitAction(checkUnit,ua);
+        //TODO: DO NOT SAVE GAMESTATE, CAN USE GAMESTATE.GETPLAYERACTIONS() IN UPDATE_Q_VALUES
+        //gameState.getPlayerActions()
+        boolean ret = pa.consistentWith(ru,gameState);
+        return ret;
+    }
+
     public boolean isUnitActionAllowed(GameState gs,Unit u, UnitAction ua) {
         PlayerAction empty = new PlayerAction();
         PhysicalGameState pgs = gs.getPhysicalGameState();
@@ -322,15 +449,6 @@ public class MASTStrategy4 {
         }
 
     }
-    private boolean checkNoConflict(Unit u,UnitAction validAction,GameState gs){
-        boolean ret = true;
-        for(ProduceSituation ps: produceSituationList){
-            if(ps.isConflict(gs,u,validAction)){
-                return  false;
-            }
-        }
-        return ret;
-    }
     private class ProduceSituation{
         public int startingTime;
         public UnitActionAssignment uaa;
@@ -366,4 +484,14 @@ public class MASTStrategy4 {
         }
 
     }
+    @Override
+    public AI clone() {
+        return new MASTStrategy4();
+    }
+
+    @Override
+    public List<ParameterSpecification> getParameters() {
+        return new ArrayList<>();
+    }
+
 }
