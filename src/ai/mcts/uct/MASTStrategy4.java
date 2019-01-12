@@ -32,7 +32,7 @@ public class MASTStrategy4 extends AI {
         produceSituationList = new ArrayList<>();
     }
     public void simulate(GameState gs, int time){
-        //List<GameState> gsList = new ArrayList<>();
+        List<GameState> gsList = new ArrayList<>();
         boolean gameover = false;
 
         for(Unit u : gs.getUnits()){
@@ -72,7 +72,7 @@ public class MASTStrategy4 extends AI {
 
                 gs.issue(player0Action);
                 gs.issue(player1Action);
-                //gsList.add(gs.clone());
+                gsList.add(gs.clone());
 
                 /*positionsUsed =gs.getResourceUsage().getPositionsUsed();
                 System.out.println("After -Resource usage ");
@@ -81,12 +81,12 @@ public class MASTStrategy4 extends AI {
                 }
                 System.out.println("**********************************END**********************************************");*/
             }
-        }while(!gameover && gs.getTime()<3000);
+        }while(!gameover && gs.getTime()<2000);
 
 
 
-        //updateQvalues(gameover,gs.winner(),gsList);
-        updateQvalues(gameover,gs);
+        updateQvalues(gameover,gs.winner(),gsList);
+        //updateQvalues(gameover,gs);
     }
     public void updateQvalues(boolean gameover,GameState gameState){
         if(gameover){
