@@ -53,9 +53,9 @@ public class MASTStrategy4 extends AI {
                 gameover = gs.cycle();
 
             } else {
-                /*System.out.println("******************SIMULATION AT TIME "+gs.getTime()+"******************************");
+                //System.out.println("******************SIMULATION AT TIME "+gs.getTime()+"******************************");
 
-                List<Integer> positionsUsed =gs.getResourceUsage().getPositionsUsed();
+                /*List<Integer> positionsUsed =gs.getResourceUsage().getPositionsUsed();
                 System.out.println("Before -Resource usage ");
                 for(Integer pos: positionsUsed){
                     System.out.println(pos% gs.getPhysicalGameState().getWidth()+","+ pos/ gs.getPhysicalGameState().getWidth() );
@@ -66,9 +66,9 @@ public class MASTStrategy4 extends AI {
                 }*/
 
                 PlayerAction player0Action = getAction(0, gs);
-                System.out.println("Player 0 -"+player0Action.toString());
+                //System.out.println("Player 0 -"+player0Action.toString());
                 PlayerAction player1Action = getAction(1, gs);
-                System.out.println("Player 1 -"+player1Action.toString());
+                //System.out.println("Player 1 -"+player1Action.toString());
 
                 gs.issue(player0Action);
                 gs.issue(player1Action);
@@ -78,44 +78,14 @@ public class MASTStrategy4 extends AI {
                 System.out.println("After -Resource usage ");
                 for(Integer pos: positionsUsed){
                     System.out.println(pos% gs.getPhysicalGameState().getWidth()+","+ pos/ gs.getPhysicalGameState().getWidth() );
-                }
-                System.out.println("**********************************END**********************************************");*/
+                }*/
+                //System.out.println("**********************************END**********************************************");
             }
-        }while(!gameover && gs.getTime()<2000);
+        }while(!gameover && gs.getTime()<time);
 
 
 
         updateQvalues(gameover,gs.winner(),gsList);
-        //updateQvalues(gameover,gs);
-    }
-    public void updateQvalues(boolean gameover,GameState gameState){
-        if(gameover){
-            int winner = gameState.winner();
-            for(int i=0;i<2;i++){
-                List<PlayerAction> paList =gameState.getPlayerActions(i);
-                HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(i);
-                for(PlayerAction pa: paList){
-                    List<Pair<Unit,UnitAction>> pairs = pa.getActions();
-                    for(Pair<Unit,UnitAction> pair:pairs){
-                        Unit u = pair.m_a;
-                        UnitAction selectedUA = pair.m_b;
-                        if (actionQvaluePerUnitMap.containsKey(u.getID())) {
-                            List<ActionQvalue> actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
-                            if(selectedUA != null) {
-                                for (ActionQvalue aqv : actionQvalueList) {
-                                    if (aqv.equalsUnitAction(selectedUA)) {
-                                        boolean isWin = (winner == u.getPlayer());
-
-                                        aqv.qvalue = aqv.qvalue * (1 - DISCOUNT_FACTOR) + (isWin ? 1.0f : 0) * DISCOUNT_FACTOR;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
     public void updateQvalues(boolean gameover,int winner,List<GameState> gsList){
         if(gameover){
@@ -238,13 +208,14 @@ public class MASTStrategy4 extends AI {
                     for(ActionQvalue aqv : actionQvalueList){
 
                         if(isUnitActionAllowed(gameState,u,aqv.ua)) {// gameState.isUnitActionAllowed(u,aqv.ua)){
-                            /*if (TryToCheckByOtherWay(base_ru, gameState, u, aqv.ua))
+                        //if(gameState.isUnitActionAllowed(u,aqv.ua)){
+                            //if (TryToCheckByOtherWay(base_ru, gameState, u, aqv.ua))
                             {
                                 avaiActionList.add(aqv);
-                            }*/
+                            }
 
 
-                            if(!positionsUsed.isEmpty()) {
+                            /*if(!positionsUsed.isEmpty()) {
                                 boolean consistent = true;
                                 for (Integer pos : positionsUsed) {
                                     int targetx = pos % pgs.getWidth();
@@ -280,7 +251,7 @@ public class MASTStrategy4 extends AI {
                                 }
                             }else{
                                 avaiActionList.add(aqv);
-                            }
+                            }*/
 
                         }
                     }
@@ -294,6 +265,7 @@ public class MASTStrategy4 extends AI {
                         try {
                             int selectedIndex = Sampler.eGreedy(dist, EPSILON);
                             selectedUa = avaiActionList.get(selectedIndex).ua;
+                            selectedUa.clearResourceUSageCache();
                             ResourceUsage r2 = selectedUa.resourceUsage(u, pgs);
                             if (!playerAction.getResourceUsage().consistentWith(r2, gameState)) {
                                 // sample at random, eliminating the ones that have not worked so far:
@@ -308,6 +280,7 @@ public class MASTStrategy4 extends AI {
                                     aqv_l.remove(selectedIndex);
                                     selectedIndex = Sampler.eGreedy(dist_l, EPSILON);
                                     selectedUa = aqv_l.get(selectedIndex).ua;
+                                    selectedUa.clearResourceUSageCache();
                                     r2 = selectedUa.resourceUsage(u, pgs);
                                 } while (!playerAction.getResourceUsage().consistentWith(r2, gameState));
                             }
@@ -397,17 +370,48 @@ public class MASTStrategy4 extends AI {
                     pgs.getUnitAt(x2, y2) != null) return false;
         }
 
-
         // Generate the reserved resources:
         for(Unit u2:pgs.getUnits()) {
             UnitActionAssignment uaa = gs.getActionAssignment(u2);
             if (uaa!=null) {
                 ResourceUsage ru = uaa.action.resourceUsage(u2, pgs);
+                uaa.action.clearResourceUSageCache();
                 empty.getResourceUsage().merge(ru);
             }
         }
 
-        if (ua.resourceUsage(u, pgs).consistentWith(empty.getResourceUsage(), gs)) return true;
+        //System.out.print("RCurrent GameState vs "+u.toString()+","+ua.toString()+"\n");
+        List<Integer> positionsUsed =empty.getResourceUsage().getPositionsUsed();
+        for(Integer pos:positionsUsed){
+            int posx= pos%pgs.getWidth();
+            int posy= pos/pgs.getHeight();
+            //System.out.print("GS("+posx+","+posy+") |");
+            ua.clearResourceUSageCache();
+            List<Integer> uaPositionUsed= ua.resourceUsage(u,pgs).clone().getPositionsUsed();
+
+            if(uaPositionUsed.isEmpty()){
+                int uaPosx= u.getX();
+                int uaPosy= u.getY();
+                //System.out.println("U,UA("+uaPosx+","+uaPosy+")");
+                if(posx == uaPosx && posy == uaPosy){
+                    return false;
+                }
+            }else{
+                //System.out.print("U,UA:");
+                /*for(Integer temp: uaPositionUsed){
+                    int tempx= temp%pgs.getWidth();
+                    int tempy= temp/pgs.getHeight();
+                    System.out.print("("+tempx+","+tempy+")");
+                }*/
+                //System.out.println();
+
+                if(uaPositionUsed.contains(pos))
+                    return false;
+            }
+        }
+
+        if (ua.resourceUsage(u, pgs).consistentWith(empty.getResourceUsage(), gs))
+            return true;
 
         return false;
     }
