@@ -47,6 +47,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
     //MASTStrategy mast;
     MASTStrategy2 mast2;
     MASTStrategy3 mast3;
+    MASTStrategy4 mast4;
     
     public UCT(UnitTypeTable utt) {
         this(100,-1,100,10,
@@ -63,6 +64,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         ef = a_ef;
         mast2 = new MASTStrategy2();
         mast3 = new MASTStrategy3();
+        mast4 = new MASTStrategy4();
     }
     
     
@@ -151,7 +153,8 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
             //mast2.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             //mast.simulate(leaf,gs2.getTime()+ MAXSIMULATIONTIME);
             //simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-            mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            //mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            mast4.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
@@ -244,7 +247,10 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
                 gs.issue(randomAI.getAction(0, gs));
                 gs.issue(randomAI.getAction(1, gs));
             }
-        }while(!gameover && gs.getTime()<time);   
+        }while(!gameover && gs.getTime()<3000);
+        if(gameover){
+            System.out.println("hehehe");
+        }
     }
     
     
