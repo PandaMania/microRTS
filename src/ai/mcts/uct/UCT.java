@@ -45,16 +45,21 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
     
     int playerForThisComputation;
     //MASTStrategy mast;
-    MASTStrategy2 mast2;
-    MASTStrategy3 mast3;
     MASTStrategy4 mast4;
-    
+    MASTStrategy5 mast5;
+    boolean useMast;
     public UCT(UnitTypeTable utt) {
         this(100,-1,100,10,
              new RandomBiasedAI(),
              new SimpleSqrtEvaluationFunction3());
-    }      
-    
+        //this.useMast =true;
+    }
+    public UCT(UnitTypeTable utt,boolean useMast) {
+        this(100,-1,100,10,
+                new RandomBiasedAI(),
+                new SimpleSqrtEvaluationFunction3());
+        this.useMast = useMast;
+    }
     
     public UCT(int available_time, int max_playouts, int lookahead, int max_depth, AI policy, EvaluationFunction a_ef) {
         super(available_time, max_playouts);
@@ -62,9 +67,8 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         randomAI = policy;
         MAX_TREE_DEPTH = max_depth;
         ef = a_ef;
-        mast2 = new MASTStrategy2();
-        mast3 = new MASTStrategy3();
         mast4 = new MASTStrategy4();
+        mast5 = new MASTStrategy5();
     }
     
     
@@ -154,7 +158,14 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
             //mast.simulate(leaf,gs2.getTime()+ MAXSIMULATIONTIME);
             //simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
             //mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
-            mast4.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            if(useMast) {
+                mast4.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+                //mast5.simulate(leaf,gs2, gs2.getTime() + MAXSIMULATIONTIME);
+            }
+            else {
+                simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+                //mast4.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            }
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
@@ -165,6 +176,9 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
                 bwNode.visit_count++;
                 bwNode = bwNode.parent;
             }
+            /*if(useMast){
+                mast5.updateQvalues(leaf,leaf.gs.gameover(),leaf.gs);
+            }*/
             //mast.updateHistoryQValues(player,leaf);
             //mast2.updateHistoryQValues(player,leaf);
             /*while(leaf!=null) {
@@ -248,9 +262,6 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
                 gs.issue(randomAI.getAction(1, gs));
             }
         }while(!gameover && gs.getTime()<3000);
-        if(gameover){
-            System.out.println("hehehe");
-        }
     }
     
     
