@@ -8,6 +8,7 @@ import rts.*;
 import rts.units.Unit;
 import rts.units.UnitType;
 import rts.units.UnitTypeTable;
+import util.Pair;
 import util.Sampler;
 
 import java.util.*;
@@ -28,6 +29,8 @@ public class MASTStrategy5 extends AI{
     private UnitType baseType;
     private UnitType workerType;
     private UnitType barracksType;
+    public int myPlayer;
+    FastNode tree;
 
     public MASTStrategy5(){
         actionQvaluePerUnitMapList =new ArrayList<>();
@@ -41,12 +44,16 @@ public class MASTStrategy5 extends AI{
     }
 
     public void simulate(UCTNode leaf,GameState gs, int time){
-        List<GameState> gsList = new ArrayList<>();
+        //List<PlayerAction> paList = new LinkedList<>();
+        List<GameState> gsList = new LinkedList<>();
         boolean gameover = false;
         UnitTypeTable utt = gs.getUnitTypeTable();
         workerType = utt.getUnitType("Worker");
         baseType = utt.getUnitType("Base");
         barracksType = utt.getUnitType("Barracks");
+
+        //tree = new FastNode(gs,this.myPlayer,1-this.myPlayer,null);
+
         for(Unit u : gs.getUnits()){
             if(u.getPlayer() >=0) {
                 HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
@@ -62,9 +69,11 @@ public class MASTStrategy5 extends AI{
         do{
 
             if (gs.isComplete()) {
+                System.out.println("in cycle");
                 gameover = gs.cycle();
 
             } else {
+                System.out.println("in getAction"+gs.getTime());
                 if(DEBUG>=2){
                     System.out.println("******************SIMULATION AT TIME "+gs.getTime()+"******************************");
                     List<Integer> positionsUsed =gs.getResourceUsage().getPositionsUsed();
@@ -77,6 +86,7 @@ public class MASTStrategy5 extends AI{
                         System.out.println(test.toString());
                     }
                 }
+
                 PlayerAction player0Action = getAction(0, gs);
                 //System.out.println("Player 0 -"+player0Action.toString());
                 PlayerAction player1Action = getAction(1, gs);
@@ -84,8 +94,10 @@ public class MASTStrategy5 extends AI{
 
                 gs.issue(player0Action);
                 gs.issue(player1Action);
-                gsList.add(gs.clone());
-
+                //gsList.add(gs);
+                //paList.add(player0Action);
+                //paList.add(player1Action);
+                gsList.add(gs);
                 if(DEBUG>=2) {
                     List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
                     System.out.println("After -Resource usage ");
@@ -99,17 +111,19 @@ public class MASTStrategy5 extends AI{
 
 
 
-        //updateQvalues(gameover,gsList,gs);
+        updateQvalues(gameover,gsList,gs);
         //updateQvalues(leaf,gameover,gs);
     }
-    public void updateQvalues(UCTNode leaf,boolean gameover,GameState lastGameState){
+
+    public void updateQvalues(UCTNode leaf, boolean gameover, GameState lastGameState){
         int winner = lastGameState.winner();
         if(!gameover){
-            float result =  ef.evaluate(0,1,lastGameState);
+            int otherPlayer = myPlayer==0?1:0;
+            float result =  ef.evaluate(myPlayer,otherPlayer,lastGameState);
             if(result == 0.5f)
-                winner = 1;
+                winner = otherPlayer;
             else{
-                winner = (result >= 0f? 0:1);
+                winner = (result >= 0f? myPlayer:otherPlayer);
             }
         }
 
@@ -145,18 +159,19 @@ public class MASTStrategy5 extends AI{
     }
     public void updateQvalues(boolean gameover,List<GameState> gsList,GameState lastGameState){
         int winner = lastGameState.winner();
+
+        float result =  ef.evaluate(this.myPlayer,1-this.myPlayer,lastGameState);
         if(!gameover){
-            float result =  ef.evaluate(0,1,lastGameState);
             if(result == 0.5f)
-                winner = 1;
+                winner = 1-this.myPlayer;
             else{
-                winner = (result >= 0f? 0:1);
+                winner = (result >= 0f? this.myPlayer:1-this.myPlayer);
             }
         }
-        for(GameState gs : gsList){
-            List<Unit> unitList= gs.getUnits();
-            for(Unit u : unitList){
-                if(u.getPlayer() >= 0) {
+        for(GameState gs:gsList){
+            List<Unit> units = gs.getUnits();
+            for(Unit u : units){
+                if(u.getPlayer() >=0){
                     HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
                     if (actionQvaluePerUnitMap.containsKey(u.getID())) {
                         List<ActionQvalue> actionQvalueList = actionQvaluePerUnitMap.get(u.getID());
@@ -164,8 +179,19 @@ public class MASTStrategy5 extends AI{
                         if(selectedUA != null) {
                             for (ActionQvalue aqv : actionQvalueList) {
                                 if (aqv.equalsUnitAction(selectedUA)) {
+                                    if(this.myPlayer != u.getPlayer()){
+                                        if(result != 0.5f)
+                                            result = -result;
+                                    }
+
+                                    aqv.accum_evaluation +=result;
+                                    aqv.visit_count++;
+                                    aqv.qvalue += ((double)aqv.accum_evaluation) / aqv.visit_count;
+
+                                    //aqv.qvalue = Math.min(0,Math.max(1,aqv.qvalue));
+
                                     boolean isWin = (winner == u.getPlayer());
-                                    aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;
+                                    //aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;
                                     break;
                                 }
                             }
@@ -174,6 +200,8 @@ public class MASTStrategy5 extends AI{
                 }
             }
         }
+
+
         if(DEBUG>=2) {
             for (int i = 0; i < actionQvaluePerUnitMapList.size(); i++) {
                 HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(i);
@@ -199,7 +227,7 @@ public class MASTStrategy5 extends AI{
     }
 
     public PlayerAction getAction(int player, GameState gameState){
-        if (!gameState.canExecuteAnyAction(player) || gameState.winner()!= -1) {
+        if (!gameState.canExecuteAnyAction(player)) {
             return new PlayerAction();
         }
         //prepareUnitActionTable(gameState, player);
@@ -208,7 +236,8 @@ public class MASTStrategy5 extends AI{
         for(Unit u:pgs.getUnits()) {
             UnitActionAssignment uaa = gameState.getUnitActions().get(u);
             if (uaa!=null) {
-                ResourceUsage ru = uaa.action.resourceUsage(u, pgs);
+                UnitAction unitAction = new UnitAction(uaa.action);
+                ResourceUsage ru =unitAction.resourceUsage(u, pgs);
                 base_ru.merge(ru);
             }
         }
@@ -272,12 +301,17 @@ public class MASTStrategy5 extends AI{
                 for (ActionQvalue aqv : actionQvalueList) {
                     if (aqv.equalsUnitAction(validAction)) {
                         isExisted = true;
+                        avaiActionList.add(new ActionQvalue(aqv));
                         break;
                     }
                 }
                 if (!isExisted) {
-                    actionQvalueList.add(generateActionQvalue(validAction));
+                    ActionQvalue newAqv = generateActionQvalue(validAction);
+                    actionQvalueList.add(newAqv);
+
+                    avaiActionList.add(new ActionQvalue(newAqv));
                 }
+
             }
 
         }
@@ -286,23 +320,28 @@ public class MASTStrategy5 extends AI{
             //try to add all possible actions which this unit can perform
             actionQvalueList = new ArrayList<>();
             for(UnitAction unitAction: choiceUAList){;
-                actionQvalueList.add(generateActionQvalue(unitAction));
+                ActionQvalue newAqv = generateActionQvalue(unitAction);
+                actionQvalueList.add(newAqv);
+
+                avaiActionList.add(new ActionQvalue(newAqv));
             }
             unitActionQvalueTable.put(u.getID(),actionQvalueList);
 
         }
-        for(ActionQvalue aqv : actionQvalueList){
+
+        /*for(ActionQvalue aqv : actionQvalueList){
             if(isUnitActionAllowed(gameState,u,aqv.ua)) {
                 aqv.ua.clearResourceUSageCache();
                 avaiActionList.add(aqv);
             }
-        }
-
-        UnitAction selectedUa = new UnitAction(UnitAction.TYPE_NONE,10);
+        }*/
+        UnitAction none = new UnitAction(UnitAction.TYPE_NONE,10);
+        UnitAction selectedUa = null;
         List<Double> dist =new ArrayList<>();
         for(ActionQvalue ap: avaiActionList){
             dist.add(ap.qvalue);
         }
+        boolean test = true;
         if(!dist.isEmpty()) {
             try {
                 int selectedIndex = Sampler.eGreedy(dist, EPSILON);
@@ -330,11 +369,17 @@ public class MASTStrategy5 extends AI{
 
             } catch (Exception e) {
                 //e.printStackTrace();
+                test=false;
             }
         }else{
             if(DEBUG >=1)
                 System.out.println(u.toString()+": cannnot find any valid unit_action");
         }
+        if(!test){
+            selectedUa = none;
+            playerAction.getResourceUsage().merge(selectedUa.resourceUsage(u, pgs));
+        }
+
         playerAction.addUnitAction(u, selectedUa);
     }
 
@@ -429,16 +474,89 @@ public class MASTStrategy5 extends AI{
         public UnitAction ua;
         public double qvalue;
         public boolean isFirstTime;
+        public float accum_evaluation ;
+        public int visit_count;
 
 
         public ActionQvalue(UnitAction ua, double qvalue){
-            this.ua = ua;
+            this.ua = new UnitAction(ua);
             this.qvalue= qvalue;
             this.isFirstTime = true;
+            this.accum_evaluation = 0;
+            this.visit_count = 0;
+        }
+        public ActionQvalue(ActionQvalue aqv){
+            this.ua = new UnitAction(aqv.ua);
+            this.qvalue= aqv.qvalue;
+            this.isFirstTime = aqv.isFirstTime;
+            this.accum_evaluation = aqv.accum_evaluation;
+            this.visit_count = aqv.visit_count;
         }
         public boolean equalsUnitAction(UnitAction checkedUa){
             return ua.equals(checkedUa);
         }
     }
+    private class FastNode{
+        public int type;    // 0 : max, 1 : min, -1: Game-over
+        FastNode parent = null;
+        public GameState gs;
 
+        public List<PlayerAction> actions = null;
+        public List<UCTNode> children = null;
+        public float evaluation_bound = 0;
+        public float accum_evaluation = 0;
+        public int visit_count = 0;
+
+        public FastNode(GameState gs,int maxplayer,int minplayer,FastNode parent){
+            this.parent = parent;
+
+            if (gs.winner()!=-1 || gs.gameover()) {
+                type = -1;
+            } else if (gs.canExecuteAnyAction(maxplayer)) {
+                type = 0;
+                actions = new ArrayList<>();
+                children = new ArrayList<>();
+            } else if (gs.canExecuteAnyAction(minplayer)) {
+                type = 1;
+                actions = new ArrayList<>();
+                children = new ArrayList<>();
+            } else {
+                type = -1;
+                System.err.println("RTMCTSNode: This should not have happened...");
+            }
+
+        }
+        public double getExplorationValue(UCTNode child){
+            double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
+
+
+            if (type == 0) {
+                // max node:
+                exploration = (evaluation_bound + exploration) / (2 * evaluation_bound);
+            } else {
+                exploration = (evaluation_bound - exploration) / (2 * evaluation_bound);
+            }
+
+            return exploration;
+        }
+        public double getExploitationValue(UCTNode child){
+            double exploitation = ((double)child.accum_evaluation) / child.visit_count;
+
+            return exploitation;
+        }
+        public double childValue(UCTNode child) {
+            double exploitation = ((double)child.accum_evaluation) / child.visit_count;
+            double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
+            if (type==0) {
+                // max node:
+                exploitation = (evaluation_bound + exploitation)/(2*evaluation_bound);
+            } else {
+                exploitation = (evaluation_bound - exploitation)/(2*evaluation_bound);
+            }
+//            System.out.println(exploitation + " + " + exploration);
+
+            double tmp = 0.05f*exploitation + exploration;
+            return tmp;
+        }
+    }
 }

@@ -92,14 +92,18 @@ public class MASTStrategy4 extends AI {
     }
     public void updateQvalues(boolean gameover,List<GameState> gsList,GameState lastGameState){
         int winner = lastGameState.winner();
+        float result =1;
         if(!gameover){
-            float result =  ef.evaluate(0,1,lastGameState);
+            result =  ef.evaluate(0,1,lastGameState);
             if(result == 0.5f)
                 winner = 1;
             else{
                 winner = (result >= 0f? 0:1);
             }
+        }else{
+            System.out.println("checking");
         }
+        double times=1f;
         for(GameState gs : gsList){
             List<Unit> unitList= gs.getUnits();
             for(Unit u : unitList){
@@ -112,8 +116,9 @@ public class MASTStrategy4 extends AI {
                             for (ActionQvalue aqv : actionQvalueList) {
                                 if (aqv.equalsUnitAction(selectedUA)) {
                                     boolean isWin = (winner == u.getPlayer());
-
-                                    aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;
+                                    double effectRate = 1/times;
+                                    aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? effectRate : 0) * DECAY_FACTOR;
+                                    //aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;
                                     break;
                                 }
                             }
@@ -121,6 +126,7 @@ public class MASTStrategy4 extends AI {
                     }
                 }
             }
+            times+=0.1f;
         }
         if(DEBUG>=2) {
             for (int i = 0; i < actionQvaluePerUnitMapList.size(); i++) {
@@ -147,7 +153,7 @@ public class MASTStrategy4 extends AI {
     }
 
     public PlayerAction getAction(int player, GameState gameState){
-        if (!gameState.canExecuteAnyAction(player) || gameState.winner()!= -1) {
+        if (!gameState.canExecuteAnyAction(player) ) {
             return new PlayerAction();
         }
         //prepareUnitActionTable(gameState, player);
@@ -156,7 +162,8 @@ public class MASTStrategy4 extends AI {
         for(Unit u:pgs.getUnits()) {
             UnitActionAssignment uaa = gameState.getUnitActions().get(u);
             if (uaa!=null) {
-                ResourceUsage ru = uaa.action.resourceUsage(u, pgs);
+                UnitAction unitAction = new UnitAction(uaa.action);
+                ResourceUsage ru =unitAction.resourceUsage(u, pgs);
                 base_ru.merge(ru);
             }
         }
@@ -180,12 +187,17 @@ public class MASTStrategy4 extends AI {
                             for (ActionQvalue aqv : actionQvalueList) {
                                 if (aqv.equalsUnitAction(validAction)) {
                                     isExisted = true;
+                                    avaiActionList.add(new ActionQvalue(aqv));
                                     break;
                                 }
                             }
                             if (!isExisted) {
-                                actionQvalueList.add(generateActionQvalue(validAction));
+                                ActionQvalue newAqv = generateActionQvalue(validAction);
+                                actionQvalueList.add(newAqv);
+
+                                avaiActionList.add(new ActionQvalue(newAqv));
                             }
+
                         }
 
                     }
@@ -194,60 +206,28 @@ public class MASTStrategy4 extends AI {
                         //try to add all possible actions which this unit can perform
                         actionQvalueList = new ArrayList<>();
                         for(UnitAction unitAction: choiceUAList){;
-                            actionQvalueList.add(generateActionQvalue(unitAction));
+                            ActionQvalue newAqv = generateActionQvalue(unitAction);
+                            actionQvalueList.add(newAqv);
+
+                            avaiActionList.add(new ActionQvalue(newAqv));
                         }
                         unitActionQvalueTable.put(u.getID(),actionQvalueList);
 
                     }
-                    for(ActionQvalue aqv : actionQvalueList){
-                        if(isUnitActionAllowed(gameState,u,aqv.ua)) {
-                            aqv.ua.clearResourceUSageCache();
-                            avaiActionList.add(aqv);
-                            /*if(!positionsUsed.isEmpty()) {
-                                boolean consistent = true;
-                                for (Integer pos : positionsUsed) {
-                                    int targetx = pos % pgs.getWidth();
-                                    int targety = pos / pgs.getWidth();
-                                    GameState checkGs = gameState.clone();
-                                    Unit postUnit = checkGs.getUnit(u.getID());
-                                    try {
-                                        if(aqv.ua.getType() == TYPE_PRODUCE){
-                                            Player p = checkGs.getPlayer(player);
-                                            if (p.getResources() - aqv.ua.getUnitType().cost<0) {
-                                                consistent=  false;
-                                            }
-                                        }
-                                        if(consistent) {
-                                            aqv.ua.execute(postUnit, checkGs);
 
-                                            if (targetx == postUnit.getX() && targety == postUnit.getY()) {
-                                                consistent = false;
-                                                break;
-                                            }
-                                        }
-
-
-                                    } catch (Exception ex) {
-                                        //System.out.println("Good! i caught you");
-                                        consistent = false;
-                                    }
-
-                                }
-                                if(consistent)
-                                {
-                                    avaiActionList.add(aqv);
-                                }
-                            }else{
-                                avaiActionList.add(aqv);
-                            }*/
-                        }
-                    }
-
-                    UnitAction selectedUa = new UnitAction(UnitAction.TYPE_NONE,10);
+        /*for(ActionQvalue aqv : actionQvalueList){
+            if(isUnitActionAllowed(gameState,u,aqv.ua)) {
+                aqv.ua.clearResourceUSageCache();
+                avaiActionList.add(aqv);
+            }
+        }*/
+                    UnitAction none = new UnitAction(UnitAction.TYPE_NONE,10);
+                    UnitAction selectedUa = null;
                     List<Double> dist =new ArrayList<>();
                     for(ActionQvalue ap: avaiActionList){
                         dist.add(ap.qvalue);
                     }
+                    boolean test = true;
                     if(!dist.isEmpty()) {
                         try {
                             int selectedIndex = Sampler.eGreedy(dist, EPSILON);
@@ -261,7 +241,6 @@ public class MASTStrategy4 extends AI {
                                 if(dist_l.isEmpty()) {
                                     if(DEBUG>=1)
                                         System.out.println(u.toString()+": remove all of valid actions");
-                                    continue;
                                 }
                                 do {
                                     dist_l.remove(selectedIndex);
@@ -275,14 +254,19 @@ public class MASTStrategy4 extends AI {
                             playerAction.getResourceUsage().merge(r2);
 
                         } catch (Exception e) {
-                            //e.printStackTrace();
+                            e.printStackTrace();
+                            test=false;
                         }
                     }else{
                         if(DEBUG >=1)
                             System.out.println(u.toString()+": cannnot find any valid unit_action");
                     }
-                    playerAction.addUnitAction(u, selectedUa);
+                    if(!test){
+                        selectedUa = none;
+                        playerAction.getResourceUsage().merge(selectedUa.resourceUsage(u, pgs));
+                    }
 
+                    playerAction.addUnitAction(u, selectedUa);
                 }
             }
         }
@@ -377,11 +361,18 @@ public class MASTStrategy4 extends AI {
     private class ActionQvalue{
         public UnitAction ua;
         public double qvalue;
+        public boolean isFirstTime;
 
 
         public ActionQvalue(UnitAction ua, double qvalue){
-            this.ua = ua;
+            this.ua = new UnitAction(ua);
             this.qvalue= qvalue;
+            this.isFirstTime = true;
+        }
+        public ActionQvalue(ActionQvalue aqv){
+            this.ua = new UnitAction(aqv.ua);
+            this.qvalue= aqv.qvalue;
+            this.isFirstTime = aqv.isFirstTime;
         }
         public boolean equalsUnitAction(UnitAction checkedUa){
             return ua.equals(checkedUa);

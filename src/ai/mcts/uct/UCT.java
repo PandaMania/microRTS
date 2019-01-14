@@ -49,13 +49,13 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
     MASTStrategy5 mast5;
     boolean useMast;
     public UCT(UnitTypeTable utt) {
-        this(100,-1,100,10,
+        this(100,-1,1000,10,
              new RandomBiasedAI(),
              new SimpleSqrtEvaluationFunction3());
         //this.useMast =true;
     }
     public UCT(UnitTypeTable utt,boolean useMast) {
-        this(100,-1,100,10,
+        this(100,-1,1000,10,
                 new RandomBiasedAI(),
                 new SimpleSqrtEvaluationFunction3());
         this.useMast = useMast;
@@ -116,6 +116,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         tree = new UCTNode(playerForThisComputation, 1-playerForThisComputation, gs, null, evaluation_bound);
         gs_to_start_from = gs;
         total_runs_this_move = 0;
+        mast5.myPlayer = playerForThisComputation;
 //        System.out.println(evaluation_bound);
         //mast.startNewComputation(a_player,gs);
     }    
@@ -159,8 +160,8 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
             //simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
             //mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             if(useMast) {
-                mast4.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-                //mast5.simulate(leaf,gs2, gs2.getTime() + MAXSIMULATIONTIME);
+                //mast4.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+                mast5.simulate(leaf,gs2, gs2.getTime() + MAXSIMULATIONTIME);
             }
             else {
                 simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
@@ -261,7 +262,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
                 gs.issue(randomAI.getAction(0, gs));
                 gs.issue(randomAI.getAction(1, gs));
             }
-        }while(!gameover && gs.getTime()<3000);
+        }while(!gameover && gs.getTime()<time);
     }
     
     
