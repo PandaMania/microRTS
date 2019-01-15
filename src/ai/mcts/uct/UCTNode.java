@@ -107,9 +107,27 @@ public class UCTNode {
         }
         return best.UCTSelectLeaf(maxplayer, minplayer, cutOffTime, max_depth);
 //        return best;
-    }    
-    
-        
+    }
+    public double getExplorationValue(UCTNode child){
+        double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
+
+
+        if (type == 0) {
+            // max node:
+            exploration = (evaluation_bound + exploration) / (2 * evaluation_bound);
+        } else {
+            exploration = (evaluation_bound - exploration) / (2 * evaluation_bound);
+        }
+
+        return exploration;
+    }
+    public double getExploitationValue(UCTNode child){
+        double exploitation = ((double)child.accum_evaluation) / child.visit_count;
+
+        return exploitation;
+    }
+
+
     public double childValue(UCTNode child) {
         double exploitation = ((double)child.accum_evaluation) / child.visit_count;
         double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);

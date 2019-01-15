@@ -522,7 +522,37 @@ public class GameState {
         if (nextChangeTime == -1) return time;
         return nextChangeTime;
     }
-        
+
+    public boolean simulate(){
+            time++;
+
+            List<UnitActionAssignment> readyToExecute = new LinkedList<UnitActionAssignment>();
+            for(UnitActionAssignment uaa:unitActions.values()) {
+                if (uaa.action.ETA(uaa.unit)+uaa.time<=time) readyToExecute.add(uaa);
+            }
+            if(!readyToExecute.isEmpty()) {
+                System.out.println("******************************time = " + time + "************************");
+
+                System.out.println("Unit information before execution:");
+                for (Unit u : this.getUnits()) {
+                    System.out.println(u.toString());
+                }
+                System.out.println("Action execution:");
+            }
+            // execute the actions:
+            for(UnitActionAssignment uaa:readyToExecute) {
+                unitActions.remove(uaa.unit);
+
+//            System.out.println("Executing action for " + u + " issued at time " + uaa.time + " with duration " + uaa.action.ETA(uaa.unit));
+                System.out.println("For player"+uaa.unit.getPlayer()+"- Im executing "+uaa.toString());
+                uaa.action.execute(uaa.unit,this);
+            }
+            if(!readyToExecute.isEmpty()) {
+                System.out.println("*****************************************************************");
+            }
+            return gameover();
+
+    }
     
     /**
      * Runs a game cycle, execution all assigned actions
@@ -535,16 +565,15 @@ public class GameState {
         for(UnitActionAssignment uaa:unitActions.values()) {
             if (uaa.action.ETA(uaa.unit)+uaa.time<=time) readyToExecute.add(uaa);
         }
-                
         // execute the actions:
         for(UnitActionAssignment uaa:readyToExecute) {
             unitActions.remove(uaa.unit);
             
 //            System.out.println("Executing action for " + u + " issued at time " + uaa.time + " with duration " + uaa.action.ETA(uaa.unit));
-            
+            //System.out.println("For player"+uaa.unit.getPlayer()+"- Im executing "+uaa.toString());
             uaa.action.execute(uaa.unit,this);
         }
-        
+
         return gameover();
     }
     
@@ -629,7 +658,7 @@ public class GameState {
      */
     public ResourceUsage getResourceUsage() {
         ResourceUsage base_ru = new ResourceUsage();
-        
+
         for(Unit u : pgs.getUnits()) {
             UnitActionAssignment uaa = unitActions.get(u);
             if (uaa!=null) {
