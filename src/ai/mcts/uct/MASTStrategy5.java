@@ -46,7 +46,7 @@ public class MASTStrategy5 extends AI{
 
     }
 
-    public void simulate(UCTNode leaf,GameState gs, int time){
+    public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();
         boolean gameover = false;
@@ -71,10 +71,14 @@ public class MASTStrategy5 extends AI{
                 }
             }
         }*/
-        int numOfSimulations = time / TIME_PER_A_MATCH;
+        int numOfSimulations = (time - gs.getTime()) / TIME_PER_A_MATCH;
 
+        int i=0;
 
-        for(int i=0;i<numOfSimulations;i++) {
+        //while(gs.getTime()<time&& !gameover) // <- this line means game state run until the end OR time is over (~1000steps) -> good table for end(bullshit)
+        for(i=0;i<numOfSimulations;i++) // <- this line means game state runs over numOfSimulation steps -> good table for near future
+        {
+            //i++;
             gsList.clear();
             do {
 
@@ -122,6 +126,7 @@ public class MASTStrategy5 extends AI{
             updateQvalues(gameover,gsList,gs);
         }
 
+        System.out.println("i = "+i);
         //updateQvalues(leaf,gameover,gs);
     }
 
