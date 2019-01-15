@@ -22,7 +22,7 @@ public class RolloutStrategyTest {
         int numberOfTestMatches = 10;
 
         for (int i = 0; i < numberOfTestMatches; i++) {
-            System.out.println("---"+i+" match is executing---");
+            System.out.println("--- match"+i+" is executing---");
             TestInfo info = new TestInfo(new String[]{"UCT-Random","UCT-MAST"});
             DoAMatch(info);
             testInfoList.add(info);
@@ -35,7 +35,7 @@ public class RolloutStrategyTest {
 
     private static void DoAMatch(TestInfo info)throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);
+        PhysicalGameState pgs = PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
@@ -72,6 +72,7 @@ public class RolloutStrategyTest {
         ai1.gameOver(gs.winner());
         ai2.gameOver(gs.winner());
         info.recordResults(gs);
+        System.out.println(info.toString());
         //System.out.println("Game Over");
     }
 
@@ -139,8 +140,8 @@ public class RolloutStrategyTest {
         }
         public String toString(){
             String s="id: "+testID+"|consumedTime: "+consumedTime+"\n";
-            s+="\t"+aiNames[0]+"-\t"+aiNames[1]+"\n";
-            s+="RESULT:\t"+result;
+            s+=aiNames[0]+"-\t"+aiNames[1]+"\n";
+            s+="RESULT:\t"+result+"\n";
             s+="NUM_WAIT:\t"+nWaitAction[0]+"-\t"+nWaitAction[1]+"\n";
             s+="NUM_PROD:\t"+nProduceAction[0]+"-\t"+nProduceAction[1]+"\n";
             s+="NUM_ATTA:\t"+nAttackAction[0]+"-\t"+nAttackAction[1]+"\n";

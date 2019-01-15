@@ -22,6 +22,9 @@ public class MASTStrategy5 extends AI{
     private static final double REGULAR_Q_VALUE = 0.2f;
     public static final double DECAY_FACTOR = 0.01f;
     public static final double EPSILON = 0.1f;
+    // one simulation match should be 30 (unit of time), so lookahead simulation time is 1000 => number of matches = 1000/30 = 33.33
+    public static final int TIME_PER_A_MATCH = 30;
+    public static final int NUMBER_OF_SIMULATIONS = 33;
     //DEBUG CONTROLER >= 1 : ON , 0 : OFF
     private static int DEBUG = 0;
     private List<HashMap<Long, List<ActionQvalue>>> actionQvaluePerUnitMapList;
@@ -54,7 +57,10 @@ public class MASTStrategy5 extends AI{
 
         //tree = new FastNode(gs,this.myPlayer,1-this.myPlayer,null);
 
-        for(Unit u : gs.getUnits()){
+        actionQvaluePerUnitMapList.get(0).clear();
+        actionQvaluePerUnitMapList.get(1).clear();
+
+        /*for(Unit u : gs.getUnits()){
             if(u.getPlayer() >=0) {
                 HashMap<Long, List<ActionQvalue>> actionQvaluePerUnitMap = actionQvaluePerUnitMapList.get(u.getPlayer());
                 if (actionQvaluePerUnitMap.isEmpty())
@@ -64,54 +70,58 @@ public class MASTStrategy5 extends AI{
 
                 }
             }
+        }*/
+        int numOfSimulations = time / TIME_PER_A_MATCH;
+
+
+        for(int i=0;i<numOfSimulations;i++) {
+            gsList.clear();
+            do {
+
+                if (gs.isComplete()) {
+                    //System.out.println("in cycle");
+                    gameover = gs.cycle();
+
+                } else {
+                    //System.out.println("in getAction" + gs.getTime());
+                    if (DEBUG >= 2) {
+                        System.out.println("******************SIMULATION AT TIME " + gs.getTime() + "******************************");
+                        List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
+                        System.out.println("Before -Resource usage ");
+                        for (Integer pos : positionsUsed) {
+                            System.out.println(pos % gs.getPhysicalGameState().getWidth() + "," + pos / gs.getPhysicalGameState().getWidth());
+                        }
+                        List<Unit> units = gs.getUnits();
+                        for (Unit test : units) {
+                            System.out.println(test.toString());
+                        }
+                    }
+
+                    PlayerAction player0Action = getAction(0, gs);
+                    //System.out.println("Player 0 -"+player0Action.toString());
+                    PlayerAction player1Action = getAction(1, gs);
+                    //System.out.println("Player 1 -"+player1Action.toString());
+
+                    gs.issue(player0Action);
+                    gs.issue(player1Action);
+                    //gsList.add(gs);
+                    //paList.add(player0Action);
+                    //paList.add(player1Action);
+                    gsList.add(gs);
+                    if (DEBUG >= 2) {
+                        List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
+                        System.out.println("After -Resource usage ");
+                        for (Integer pos : positionsUsed) {
+                            System.out.println(pos % gs.getPhysicalGameState().getWidth() + "," + pos / gs.getPhysicalGameState().getWidth());
+                        }
+                        System.out.println("**********************************END**********************************************");
+                    }
+                }
+            } while (!gameover && gs.getTime() < TIME_PER_A_MATCH);
+
+            updateQvalues(gameover,gsList,gs);
         }
 
-        do{
-
-            if (gs.isComplete()) {
-                System.out.println("in cycle");
-                gameover = gs.cycle();
-
-            } else {
-                System.out.println("in getAction"+gs.getTime());
-                if(DEBUG>=2){
-                    System.out.println("******************SIMULATION AT TIME "+gs.getTime()+"******************************");
-                    List<Integer> positionsUsed =gs.getResourceUsage().getPositionsUsed();
-                    System.out.println("Before -Resource usage ");
-                    for(Integer pos: positionsUsed){
-                        System.out.println(pos% gs.getPhysicalGameState().getWidth()+","+ pos/ gs.getPhysicalGameState().getWidth() );
-                    }
-                    List<Unit> units = gs.getUnits();
-                    for(Unit test:units){
-                        System.out.println(test.toString());
-                    }
-                }
-
-                PlayerAction player0Action = getAction(0, gs);
-                //System.out.println("Player 0 -"+player0Action.toString());
-                PlayerAction player1Action = getAction(1, gs);
-                //System.out.println("Player 1 -"+player1Action.toString());
-
-                gs.issue(player0Action);
-                gs.issue(player1Action);
-                //gsList.add(gs);
-                //paList.add(player0Action);
-                //paList.add(player1Action);
-                gsList.add(gs);
-                if(DEBUG>=2) {
-                    List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
-                    System.out.println("After -Resource usage ");
-                    for (Integer pos : positionsUsed) {
-                        System.out.println(pos % gs.getPhysicalGameState().getWidth() + "," + pos / gs.getPhysicalGameState().getWidth());
-                    }
-                    System.out.println("**********************************END**********************************************");
-                }
-            }
-        }while(!gameover && gs.getTime()<time);
-
-
-
-        updateQvalues(gameover,gsList,gs);
         //updateQvalues(leaf,gameover,gs);
     }
 
@@ -186,7 +196,9 @@ public class MASTStrategy5 extends AI{
 
                                     aqv.accum_evaluation +=result;
                                     aqv.visit_count++;
-                                    aqv.qvalue += ((double)aqv.accum_evaluation) / aqv.visit_count;
+
+
+                                    aqv.qvalue +=  ((double)aqv.accum_evaluation) / aqv.visit_count ;
 
                                     //aqv.qvalue = Math.min(0,Math.max(1,aqv.qvalue));
 

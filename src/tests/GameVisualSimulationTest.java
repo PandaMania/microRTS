@@ -27,7 +27,7 @@ import util.XMLWriter;
 public class GameVisualSimulationTest {
     public static void main(String args[]) throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);
+        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
@@ -35,7 +35,7 @@ public class GameVisualSimulationTest {
         int PERIOD = 1;
         boolean gameover = false;
         
-        AI ai1 = new UCT(utt,false);//new RandomBiasedAI(utt);// new WorkerRush(utt, new BFSPathFinding());
+        AI ai1 = new RandomBiasedAI(utt);//new UCT(utt,false);//// new WorkerRush(utt, new BFSPathFinding());
         AI ai2 = new UCT(utt,true);//new RandomBiasedAI();
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);

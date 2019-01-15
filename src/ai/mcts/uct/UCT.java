@@ -52,10 +52,10 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         this(100,-1,1000,10,
              new RandomBiasedAI(),
              new SimpleSqrtEvaluationFunction3());
-        //this.useMast =true;
+        this.useMast =true;
     }
     public UCT(UnitTypeTable utt,boolean useMast) {
-        this(100,-1,1000,10,
+        this(100,-1, 1000,10,
                 new RandomBiasedAI(),
                 new SimpleSqrtEvaluationFunction3());
         this.useMast = useMast;
