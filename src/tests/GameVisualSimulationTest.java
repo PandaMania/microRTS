@@ -10,6 +10,7 @@ import ai.abstraction.WorkerRush;
 import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.mcts.naivemcts.NaiveMCTS;
 import ai.mcts.uct.UCT;
+import ai.montecarlo.lsi.LSI;
 import ai.scv.SCV;
 import gui.PhysicalGameStatePanel;
 import java.io.OutputStreamWriter;
@@ -27,15 +28,15 @@ import util.XMLWriter;
 public class GameVisualSimulationTest {
     public static void main(String args[]) throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//
+        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
         int MAXCYCLES = 5000;
-        int PERIOD = 1;
+        int PERIOD = 20;
         boolean gameover = false;
         
-        AI ai1 = new RandomBiasedAI(utt);//new UCT(utt,false);//// new WorkerRush(utt, new BFSPathFinding());
+        AI ai1 = new LSI(utt); //new WorkerRush(utt, new BFSPathFinding());//new RandomBiasedAI(utt);//new UCT(utt,false);//// new WorkerRush(utt, new BFSPathFinding());
         AI ai2 = new UCT(utt,true);//new RandomBiasedAI();
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
