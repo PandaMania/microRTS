@@ -24,7 +24,7 @@ public class MASTStrategy5 extends AI{
     public static final double EPSILON = 0.1f;
     // one simulation match should be 30 (unit of time), so lookahead simulation time is 1000 => number of matches = 1000/30 = 33.33
     public static final int TIME_PER_A_MATCH = 30;
-    public static final int NUMBER_OF_SIMULATIONS = 33;
+    public static final int NUMBER_OF_MATCHES = 33;
     //DEBUG CONTROLER >= 1 : ON , 0 : OFF
     private static int DEBUG = 0;
     private List<HashMap<Long, List<ActionQvalue>>> actionQvaluePerUnitMapList;
@@ -72,12 +72,29 @@ public class MASTStrategy5 extends AI{
             }
         }*/
         int numOfSimulations = (time - gs.getTime()) / TIME_PER_A_MATCH;
+        int simulateTimePerMatch =(time - gs.getTime()) / NUMBER_OF_MATCHES;
 
         int i=0;
 
-        //while(gs.getTime()<time&& !gameover) // <- this line means game state run until the end OR time is over (~1000steps) -> good table for end(bullshit)
-        for(i=0;i<numOfSimulations;i++) // <- this line means game state runs over numOfSimulation steps -> good table for near future
+        /**
+         * while(gs.getTime()<time&& !gameover)
+         * //game state run until the end OR time is over (~1000steps) -> good table for nearly end of match (like MCTS)
+         * //only update table at the end
+         * //works like MCTS
+         */
+
+        //while(gs.getTime()<time&& !gameover)
+        /**
+         * for(i=0;i<numOfSimulations;i++)
+         * //game state runs over numOfSimulation(~33) steps -> good table for near future
+         * //update table in every end of step
+         * //works like TD(lamda)
+         */
+        //for(i=0;i<numOfSimulations;i++) //<- works with fixed simulation time              //<- better for only short MAXSIMULATIONTIME
+        for(i=0;i<NUMBER_OF_MATCHES;i++)    //<- works with fixed number of simulation matches //<- better for long + short MAXSIMULATIONTIME
         {
+            if(gameover)
+                break;
             //i++;
             gsList.clear();
             do {
@@ -121,12 +138,12 @@ public class MASTStrategy5 extends AI{
                         System.out.println("**********************************END**********************************************");
                     }
                 }
-            } while (!gameover && gs.getTime() < TIME_PER_A_MATCH);
+            } while (!gameover && gs.getTime() < simulateTimePerMatch);//TIME_PER_A_MATCH);
 
             updateQvalues(gameover,gsList,gs);
         }
 
-        System.out.println("i = "+i);
+        //System.out.println("i = "+i);
         //updateQvalues(leaf,gameover,gs);
     }
 
