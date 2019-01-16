@@ -13,6 +13,8 @@ import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import ai.mcts.uct.MASTStrategy5;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;
@@ -32,6 +34,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     GameState gs_to_start_from = null;
     public HEIRUCTNode tree = null;
+    public MASTStrategy5 mastStrategy5= new MASTStrategy5();
 
 
     // statistics:
@@ -113,40 +116,41 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
 
         if (gs.canExecuteAnyAction(player)) {
-            if(tree==null){
+           // if(tree==null){
                 startNewComputation(player,gs.clone());
                 computeDuringOneGameFrame();
                 return getBestActionSoFar();
-            } else{
+           /*} else{
                 startNewComputation(gs.clone(),tree);
                 computeDuringOneGameFrame();
                 return getBestActionSoFar();
                 }
-        } else{
-            return new PlayerAction();
-                }
 
+*/        }else {
+            return new PlayerAction();
+        }
 
     }
 
 
     public void startNewComputation(int a_player, GameState gs) throws Exception {
-        System.out.println("starting computation");
+        //System.out.println("starting computation");
 
         float evaluation_bound = ef.upperBound(gs);
         playerForThisComputation = a_player;
-        HEIRUCTNode newRoot= WWF(tree, gs);
-        if(newRoot==null){
-            tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs, null, null, evaluation_bound);
+     //  HEIRUCTNode newRoot= WWF(tree, gs);
+        //if(newRoot==null){
+            tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs.clone(), null, null, evaluation_bound);
             gs_to_start_from = gs;
             total_runs_this_move = 0;
+            mastStrategy5.myPlayer = playerForThisComputation;
 
-        }else
+        /*}else
         tree =  copyTree(newRoot, gs);
             gs_to_start_from = gs;
             total_runs_this_move = tree.visit_count;
 
-//        System.out.println(evaluation_bound);
+//        System.out.println(evaluation_bound);*/
     }
 
 
@@ -183,8 +187,10 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
-            simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-
+           if(PLAYOUT) {
+               mastStrategy5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+           }else
+               simulate(gs2,gs2.getTime() + MAXSIMULATIONTIME);
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
@@ -255,7 +261,11 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         for(int i = 0;i<N;i++) {
             GameState gs2 = gs.cloneIssue(pa);
             GameState gs3 = gs2.clone();
-            simulate(gs3,gs3.getTime() + MAXSIMULATIONTIME);
+            if(PLAYOUT) {
+                mastStrategy5.simulate(gs3, gs3.getTime() + MAXSIMULATIONTIME);
+            }else
+                simulate(gs3,gs3.getTime() + MAXSIMULATIONTIME);
+
             int time = gs3.getTime() - gs2.getTime();
             // Discount factor:
             accum += (float)(ef.evaluate(player, 1-player, gs3)*Math.pow(0.99,time/10.0));
@@ -372,7 +382,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     public HEIRUCTNode copyTree( HEIRUCTNode newRoot, GameState current){
         newRoot.uctParent=null;
         newRoot.hParent=null;
-       // newRoot.gs=current;
+       // newRoot.gs=current.clone();
         return newRoot;
     }
     public void startNewComputation( GameState gs, HEIRUCTNode oldRoot) throws Exception {

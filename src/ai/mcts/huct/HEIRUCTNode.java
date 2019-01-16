@@ -52,6 +52,7 @@ public class HEIRUCTNode extends HEIRNode{
             moveGenerator = new PlayerActionGenerator(a_gs, maxplayer);
 
             moveGenerator.randomizeOrder();
+            moveGenerator.DangerBasedOrder();
             actions = new ArrayList<>();
             uctChildren = new ArrayList<HEIRUCTNode>();
             hChildren = new ArrayList<HEIRHierarchicalNode>();

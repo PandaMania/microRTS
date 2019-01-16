@@ -81,6 +81,7 @@ public class CompareAllAIsObservable {
         bots.add(new NaiveMCTS(TIME, MAX_PLAYOUTS, PLAYOUT_TIME, MAX_DEPTH, 0.33f, 0.0f, 0.75f, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), true));
         bots.add(new NaiveMCTS(TIME, MAX_PLAYOUTS, PLAYOUT_TIME, MAX_DEPTH, 1.00f, 0.0f, 0.25f, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), true));
 
+
         if (CONTINUING) {
         	// Find out which of the bots can be used in "continuing" mode:
         	List<AI> bots2 = new LinkedList<>();

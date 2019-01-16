@@ -161,7 +161,7 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
             //mast3.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
             if(useMast) {
                 //mast4.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-                mast5.simulate(leaf,gs2, gs2.getTime() + MAXSIMULATIONTIME);
+                mast5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
             }
             else {
                 simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
