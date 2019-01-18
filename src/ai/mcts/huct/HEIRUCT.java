@@ -1,4 +1,4 @@
-/*
+﻿/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 import ai.mcts.uct.MASTStrategy5;
+import ai.mcts.uct.MASTStrategyO1;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;
@@ -35,6 +36,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     GameState gs_to_start_from = null;
     public HEIRUCTNode tree = null;
     public MASTStrategy5 mastStrategy5= new MASTStrategy5();
+    public MASTStrategyO1 mastStrategyO =new MASTStrategyO1();
 
 
     // statistics:
@@ -178,7 +180,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
             gs_to_start_from = gs;
             total_runs_this_move = 0;
             mastStrategy5.myPlayer = playerForThisComputation;
-        }
+            mastStrategyO.myPlayer = playerForThisComputation;
 
     }
 
@@ -217,7 +219,8 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
            if(PLAYOUT) {
-               mastStrategy5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+               //mastStrategy5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+               mastStrategyO.simulate(gs2,gs2.getTime() + MAXSIMULATIONTIME);
            }else
                simulate(gs2,gs2.getTime() + MAXSIMULATIONTIME);
             int time = gs2.getTime() - gs_to_start_from.getTime();
