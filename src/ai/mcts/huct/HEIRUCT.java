@@ -1,4 +1,4 @@
-/*
+﻿/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -180,11 +180,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
             gs_to_start_from = gs;
             total_runs_this_move = 0;
             mastStrategy5.myPlayer = playerForThisComputation;
-<<<<<<< HEAD
             mastStrategyO.myPlayer = playerForThisComputation;
-=======
-        }
->>>>>>> origin/master
 
     }
 
