@@ -12,7 +12,11 @@ import util.Sampler;
 
 import java.util.*;
 
-public class MASTStrategyO1 extends AI {
+/**
+ * @author Huy
+ * MAST original version with UnitType
+ */
+public class MASTStrategyO1 extends MAST {
     private static final double BIAS_Q_VALUE = 1f;
     private static final double REGULAR_Q_VALUE = 0.2f;
     public static final double DECAY_FACTOR = 0.01f;
@@ -27,7 +31,7 @@ public class MASTStrategyO1 extends AI {
     private UnitType lightType;
     private UnitType heavyType;
     private UnitType rangeType;
-    public int myPlayer;
+    //public int myPlayer;
 
     public MASTStrategyO1(){
         actionQvaluePerUnitTypeMapList =new ArrayList<>();
@@ -40,6 +44,7 @@ public class MASTStrategyO1 extends AI {
 
     }
 
+    @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();

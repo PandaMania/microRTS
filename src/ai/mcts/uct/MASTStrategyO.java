@@ -15,8 +15,11 @@ import java.util.*;
 import static rts.UnitAction.TYPE_ATTACK_LOCATION;
 import static rts.UnitAction.TYPE_HARVEST;
 import static rts.UnitAction.TYPE_RETURN;
-
-public class MASTStrategyO extends AI{
+/**
+ * @author Huy
+ * MAST original version per units
+ */
+public class MASTStrategyO extends MAST{
     private static final double BIAS_Q_VALUE = 1f;
     private static final double REGULAR_Q_VALUE = 0.2f;
     public static final double DECAY_FACTOR = 0.01f;
@@ -28,7 +31,7 @@ public class MASTStrategyO extends AI{
     private UnitType baseType;
     private UnitType workerType;
     private UnitType barracksType;
-    public int myPlayer;
+    //public int myPlayer;
 
     public MASTStrategyO(){
         actionQvaluePerUnitMapList =new ArrayList<>();
@@ -41,6 +44,7 @@ public class MASTStrategyO extends AI{
 
     }
 
+    @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();

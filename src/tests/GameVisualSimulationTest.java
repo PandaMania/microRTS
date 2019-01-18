@@ -11,6 +11,9 @@ import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import ai.mcts.huct.HEIRUCT;
 import ai.mcts.naivemcts.NaiveMCTS;
+import ai.mcts.uct.MASTStrategy5;
+import ai.mcts.uct.MASTStrategyO;
+import ai.mcts.uct.MASTStrategyO1;
 import ai.mcts.uct.UCT;
 import ai.montecarlo.lsi.LSI;
 import ai.scv.SCV;
@@ -38,8 +41,8 @@ public class GameVisualSimulationTest {
         int PERIOD = 1;
         boolean gameover = false;
         
-        AI ai1 = new HEIRUCT(100,3000,100,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,false);
-        AI ai2 = new HEIRUCT(100,3000,100,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true);
+        AI ai1 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai2 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategyO());
 
 
 
