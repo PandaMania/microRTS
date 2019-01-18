@@ -1,4 +1,4 @@
-﻿/*
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Random;
 
 import ai.mcts.uct.MASTStrategy5;
-import ai.mcts.uct.MASTStrategyO1;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;
@@ -36,7 +35,6 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
     GameState gs_to_start_from = null;
     public HEIRUCTNode tree = null;
     public MASTStrategy5 mastStrategy5= new MASTStrategy5();
-    public MASTStrategyO1 mastStrategyO =new MASTStrategyO1();
 
 
     // statistics:
@@ -82,7 +80,6 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         PLAYOUT=playout;
         SAVING=saving;
         ORDERED=ordered;
-        tree=null;
 
     }
 
@@ -116,24 +113,6 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     public PlayerAction getAction(int player, GameState gs) throws Exception
     {
-        if (SAVING == true) {
-            if (gs.canExecuteAnyAction(player)) {
-                if(tree==null){
-                startNewComputation(player,gs.clone());
-                computeDuringOneGameFrame();
-                return getBestActionSoFar();
-           } else{
-                startNewComputation(gs.clone(),tree);
-                computeDuringOneGameFrame();
-                return getBestActionSoFar();
-                }
-
-        }else {
-                return new PlayerAction();
-            }
-
-        }else
-
 
 
         if (gs.canExecuteAnyAction(player)) {
@@ -156,32 +135,22 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
 
     public void startNewComputation(int a_player, GameState gs) throws Exception {
         //System.out.println("starting computation");
-        if(SAVING){
-            float evaluation_bound = ef.upperBound(gs);
-            playerForThisComputation = a_player;
-             HEIRUCTNode newRoot= WWF(tree, gs);
-            if(newRoot==null){
-            tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs.clone(), null, null, evaluation_bound);
-            gs_to_start_from = gs;
-            total_runs_this_move = 0;
-            mastStrategy5.myPlayer = playerForThisComputation;
 
-        }else {
-                tree = copyTree(newRoot, gs);
-                gs_to_start_from = gs;
-                total_runs_this_move = tree.visit_count;
-                mastStrategy5.myPlayer = playerForThisComputation;
-            }
-        }else{
         float evaluation_bound = ef.upperBound(gs);
         playerForThisComputation = a_player;
-
+     //  HEIRUCTNode newRoot= WWF(tree, gs);
+        //if(newRoot==null){
             tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs.clone(), null, null, evaluation_bound);
             gs_to_start_from = gs;
             total_runs_this_move = 0;
             mastStrategy5.myPlayer = playerForThisComputation;
-            mastStrategyO.myPlayer = playerForThisComputation;
 
+        /*}else
+        tree =  copyTree(newRoot, gs);
+            gs_to_start_from = gs;
+            total_runs_this_move = tree.visit_count;
+
+//        System.out.println(evaluation_bound);*/
     }
 
 
@@ -219,8 +188,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
            if(PLAYOUT) {
-               //mastStrategy5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-               mastStrategyO.simulate(gs2,gs2.getTime() + MAXSIMULATIONTIME);
+               mastStrategy5.simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
            }else
                simulate(gs2,gs2.getTime() + MAXSIMULATIONTIME);
             int time = gs2.getTime() - gs_to_start_from.getTime();
@@ -392,12 +360,12 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         //System.out.println("current" + current.getPhysicalGameState());
 
         if(oldRoot!=null) {
-            for (int k = 0; k < oldRoot.uctChildren.get(0).uctChildren.size(); k++) {
+            for (int j = 0; j < oldRoot.uctChildren.get(0).uctChildren.size(); j++) {
                // System.out.println(oldRoot.uctChildren.get(0).uctChildren.get(j).gs.getPhysicalGameState());
-                if (compare2GameStates(oldRoot.uctChildren.get(0).uctChildren.get(k).gs,current)) {
-                    toReturn = copyTree(oldRoot.uctChildren.get(0).uctChildren.get(k), current);
+                if (compare2GameStates(oldRoot.uctChildren.get(0).uctChildren.get(j).gs,current)) {
+                    toReturn = copyTree(oldRoot.uctChildren.get(0).uctChildren.get(j), current);
                     savedTrees++;
-                    // System.out.println("we saved " + (double) savedTrees/(savedTrees+deadTrees) + "% trees");
+                     System.out.println("we saved " + (double) savedTrees/(savedTrees+deadTrees) + "% trees");
 
                     return  toReturn;
                 }
@@ -405,7 +373,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         }
         deadTrees++;
 
-       // System.out.println("we saved " +(double) savedTrees/(savedTrees+deadTrees) + "% trees");
+        System.out.println("we saved " +(double) savedTrees/(savedTrees+deadTrees) + "% trees");
         return null;
 
 
