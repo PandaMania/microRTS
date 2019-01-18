@@ -30,17 +30,18 @@ import util.XMLWriter;
 public class GameVisualSimulationTest {
     public static void main(String args[]) throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//
+        PhysicalGameState pgs = PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
         int MAXCYCLES = 5000;
-        int PERIOD = 20;
+        int PERIOD = 1;
         boolean gameover = false;
         
         AI ai1 = new HEIRUCT(100,3000,100,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,false);
-        AI ai2 = new RandomBiasedAI();
-		
+        AI ai2 = new HEIRUCT(100,3000,100,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true);
+
+
 
         JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
 //        JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_WHITE);
