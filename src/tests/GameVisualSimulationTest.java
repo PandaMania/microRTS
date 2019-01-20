@@ -41,8 +41,8 @@ public class GameVisualSimulationTest {
         int PERIOD = 1;
         boolean gameover = false;
         
-        AI ai1 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
-        AI ai2 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategyO());
+        AI ai1 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai2 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
 
 
 
