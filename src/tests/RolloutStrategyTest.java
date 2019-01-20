@@ -1,5 +1,6 @@
 package tests;
 
+import ai.RandomBiasedAI;
 import ai.core.AI;
 import ai.mcts.uct.UCT;
 import gui.PhysicalGameStatePanel;
@@ -43,8 +44,8 @@ public class RolloutStrategyTest {
         int PERIOD = 20;
         boolean gameover = false;
 
-        AI ai1 = new UCT(utt,false);//new RandomBiasedAI(utt);// new WorkerRush(utt, new BFSPathFinding());
-        AI ai2 = new UCT(utt,true);//new RandomBiasedAI();
+        AI ai1 = new RandomBiasedAI(utt);// new WorkerRush(utt, new BFSPathFinding());
+        AI ai2 = new RandomBiasedAI();
         //JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_BLACK);
 //        JFrame w = PhysicalGameStatePanel.newVisualizer(gs,640,640,false,PhysicalGameStatePanel.COLORSCHEME_WHITE);
 
