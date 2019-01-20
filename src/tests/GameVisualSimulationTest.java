@@ -42,7 +42,7 @@ public class GameVisualSimulationTest {
         boolean gameover = false;
         
         AI ai1 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
-        AI ai2 = new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai2 = new NaiveMCTS(100,-1,1000,10,0.3f, 0.0f, 0.4f,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),true,true,new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
 
 
 

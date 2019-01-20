@@ -13,6 +13,8 @@ import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import ai.mcts.uct.MAST;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;
@@ -60,7 +62,10 @@ public class NaiveMCTS extends AIWithComputationBudget implements InterruptibleA
     public long total_cycles_executed = 0;
     public long total_actions_issued = 0;
     public long total_time = 0;
-    
+
+    public boolean PLAYOUT;
+    public MAST mast;
+
     
     public NaiveMCTS(UnitTypeTable utt) {
         this(100,-1,100,10,
@@ -103,8 +108,27 @@ public class NaiveMCTS extends AIWithComputationBudget implements InterruptibleA
         discount_0 = 1.0f;
         ef = a_ef;
         forceExplorationOfNonSampledActions = fensa;
-    }    
-    
+    }
+    public NaiveMCTS(int available_time, int max_playouts, int lookahead, int max_depth, float e_l, float e_g, float e_0, AI policy, EvaluationFunction a_ef, boolean fensa,boolean PLAYOUT,MAST mast) {
+        super(available_time, max_playouts);
+        MAXSIMULATIONTIME = lookahead;
+        playoutPolicy = policy;
+        MAX_TREE_DEPTH = max_depth;
+        initial_epsilon_l = epsilon_l = e_l;
+        initial_epsilon_g = epsilon_g = e_g;
+        initial_epsilon_0 = epsilon_0 = e_0;
+        discount_l = 1.0f;
+        discount_g = 1.0f;
+        discount_0 = 1.0f;
+        ef = a_ef;
+        forceExplorationOfNonSampledActions = fensa;
+        this.PLAYOUT = PLAYOUT;
+        if(this.PLAYOUT){
+            this.mast = mast;
+        }
+    }
+
+
     public NaiveMCTS(int available_time, int max_playouts, int lookahead, int max_depth, float e_l, float e_g, float e_0, int a_global_strategy, AI policy, EvaluationFunction a_ef, boolean fensa) {
         super(available_time, max_playouts);
         MAXSIMULATIONTIME = lookahead;
@@ -163,7 +187,9 @@ public class NaiveMCTS extends AIWithComputationBudget implements InterruptibleA
         
         epsilon_l = initial_epsilon_l;
         epsilon_g = initial_epsilon_g;
-        epsilon_0 = initial_epsilon_0;        
+        epsilon_0 = initial_epsilon_0;
+
+        this.mast.myPlayer = a_player;
     }    
     
     
@@ -198,8 +224,11 @@ public class NaiveMCTS extends AIWithComputationBudget implements InterruptibleA
 
         if (leaf!=null) {            
             GameState gs2 = leaf.gs.clone();
-            simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
-
+            if(PLAYOUT) {
+                mast.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+            }else {
+                simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
+            }
             int time = gs2.getTime() - gs_to_start_from.getTime();
             double evaluation = ef.evaluate(player, 1-player, gs2)*Math.pow(0.99,time/10.0);
 
