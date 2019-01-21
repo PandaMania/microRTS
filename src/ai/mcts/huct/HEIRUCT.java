@@ -92,8 +92,8 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
         SAVING=saving;
         ORDERED=ordered;
         randomAI = policy;
-
-        this.mast = mast;
+        if(PLAYOUT)
+            this.mast = mast;
 
     }
 
@@ -156,6 +156,7 @@ public class HEIRUCT extends AIWithComputationBudget implements InterruptibleAI 
             tree = new HEIRUCTNode(playerForThisComputation, 1 - playerForThisComputation, gs.clone(), null, null, evaluation_bound);
             gs_to_start_from = gs;
             total_runs_this_move = 0;
+        if(PLAYOUT)
             mast.myPlayer = playerForThisComputation;
 
         /*}else

@@ -188,8 +188,8 @@ public class NaiveMCTS extends AIWithComputationBudget implements InterruptibleA
         epsilon_l = initial_epsilon_l;
         epsilon_g = initial_epsilon_g;
         epsilon_0 = initial_epsilon_0;
-
-        this.mast.myPlayer = a_player;
+        if(PLAYOUT)
+            this.mast.myPlayer = a_player;
     }    
     
     

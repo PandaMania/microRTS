@@ -6,6 +6,8 @@ import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import ai.mcts.uct.MASTStrategy5;
 import ai.mcts.uct.MASTStrategyO;
 import ai.mcts.uct.MASTStrategyO1;
+import ai.mcts.uct.UCT;
+import ai.montecarlo.lsi.LSI;
 import gui.PhysicalGameStatePanel;
 import rts.GameState;
 import rts.PhysicalGameState;
@@ -38,15 +40,13 @@ import java.util.Date;
 public class ExperimentingPlayout {
 
     public static void main(String args[]) throws Exception {
+        System.out.println("testing");
 
+        ExperimentData data1 = new ExperimentData(Calendar.getInstance().getTime().toString(), "HUCT", "UCT", 1000);
 
-        ExperimentData data1 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+MyMAST","HEIRUCT+MASTO",1000);
-        ExperimentData data2 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+MyMAST","HEIRUCT+MASTO1",1000);
-        ExperimentData data3 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+MASTO","HEIRUCT+MASTO1",1000);
+        for (int j = 0; j < 1; j++) {
 
-        for(int j=0; j< 3; j++) {
-
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < 200; i++) {
 
                 //    for (int j = 9; j < i; j++) {
                 UnitTypeTable utt = new UnitTypeTable();
@@ -57,25 +57,15 @@ public class ExperimentingPlayout {
                 int PERIOD = 1;
                 boolean gameover = false;
 
-                AI ai1 = null; AI ai2 = null;
-                if(j==0) {
-                    //"HEIRUCT+MyMAST","HEIRUCT+MASTO"
-                    ai1= new HEIRUCT(100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategy5());
-                    ai2 = new HEIRUCT(100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategyO());
+                AI ai1 = null;
+                AI ai2 = null;
 
+                //"HEIRUCT+MyMAST","HEIRUCT+MASTO"
+                ai1 = new HEIRUCT(100, -1, 1000, 20, null, new SimpleSqrtEvaluationFunction3(), false, false, true, new MASTStrategy5());
+               // ai1 = new NaiveMCTS(utt);
+                ai2=new UCT(utt);
 
-                }else if(j==1){
-                    //"HEIRUCT+MyMAST","HEIRUCT+MASTO1"
-                    ai1= new HEIRUCT(100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategy5());
-                    ai2 = new HEIRUCT(100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategyO1());
-
-                }
-                else{
-                    //"HEIRUCT+MASTO","HEIRUCT+MASTO1"
-                    ai1= new HEIRUCT(100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategyO());
-                    ai2 = new HEIRUCT(100, -1, 1000, 10,null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategyO1());
-
-                }
+                //100, -1, 1000, 10, null, new SimpleSqrtEvaluationFunction3(), false, false, true,new MASTStrategyO());
 
 
                 long nextTimeToUpdate = System.currentTimeMillis() + PERIOD;
@@ -101,19 +91,10 @@ public class ExperimentingPlayout {
                 ai1.gameOver(gs.winner());
                 ai2.gameOver(gs.winner());
 
-                if(j==0) {
+                if (j == 0) {
                     data1.results.add(gs.winner());
                     data1.times.add(gs.getTime());
-                }else if(j==1){
-                    data2.results.add(gs.winner());
-                    data2.times.add(gs.getTime());
-                }
-                else{
-                    data3.results.add(gs.winner());
-                    data3.times.add(gs.getTime());
-                }
 
-            }
             /*if(j==10) {
                 System.out.println("Finished - j="+j);
                 System.out.println(data1.toString());
@@ -132,22 +113,13 @@ public class ExperimentingPlayout {
                 System.out.println("saved at "+savedPath);
             }*/
 
-            System.out.println("Finished - j="+j);
-            if(j==0) {
-                System.out.println(data1.toString());
-                String savedPath= data1.toFile();
-                System.out.println("saved at "+savedPath);
-            }else if(j==1){
-                System.out.println(data2.toString());
-                String savedPath= data2.toFile();
-                System.out.println("saved at "+savedPath);
-            }
-            else{
-                System.out.println(data3.toString());
-                String savedPath= data3.toFile();
-                System.out.println("saved at "+savedPath);
-            }
-        }
+                    System.out.println("Finished - j=" + j);
+                    if (j == 0) {
+                        System.out.println(data1.toString());
+                        String savedPath = data1.toFile();
+                        System.out.println("saved at " + savedPath);
+
+                    }
 
 
 
@@ -158,7 +130,10 @@ public class ExperimentingPlayout {
 
         System.out.println( data1.toString());*/
 
+                }
+
+
+            }
+        }
     }
-
-
-}
+    }

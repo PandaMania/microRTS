@@ -125,7 +125,8 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         tree = new UCTNode(playerForThisComputation, 1-playerForThisComputation, gs, null, evaluation_bound);
         gs_to_start_from = gs;
         total_runs_this_move = 0;
-        mast.myPlayer = a_player;
+        if(PLAYOUT)
+            mast.myPlayer = a_player;
 //        System.out.println(evaluation_bound);
     }
 

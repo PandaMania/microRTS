@@ -3,6 +3,9 @@ package ai.mcts.huct;
 import ai.RandomBiasedAI;
 import ai.core.AI;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
+import ai.mcts.uct.MASTStrategy5;
+import ai.mcts.uct.UCT;
+import ai.montecarlo.lsi.LSI;
 import gui.PhysicalGameStatePanel;
 import rts.GameState;
 import rts.PhysicalGameState;
@@ -51,12 +54,15 @@ public class Experiments {
     public static void main(String args[]) throws Exception {
         String path= "test-"+"HEIRUCTwMAST"+"-"+"HEIRUCTwRAN"+"-1000.csv";
 
+        ExperimentData data1;
 
-        ExperimentData data1 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+Saving","HEIRUCT+depth10",1000);
-        ExperimentData data2 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+Saving","HEIRUCT+depth15",1000);
-        ExperimentData data3 = new ExperimentData(Calendar.getInstance().getTime().toString(),"HEIRUCT+Saving","HEIRUCT+depth20",1000);
+        int x;
+        for(int j=4; j< 6; j++) {
+            x=500*j;
 
-        for(int j=10; j< 21; j+=5) {
+
+                data1= new ExperimentData(Calendar.getInstance().getTime().toString(),"HUCT_depth1000","HUCT_depth"+x,1000);
+
             for (int i = 0; i < 200; i++) {
 
             //    for (int j = 9; j < i; j++) {
@@ -69,8 +75,10 @@ public class Experiments {
             int PERIOD = 1;
             boolean gameover = false;
 
-            AI ai1 = new HEIRUCT(100, -1, 1000, j, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), false, true, true);
-            AI ai2 = new HEIRUCT(100, -1, 1000, j, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), false, false, true);
+            AI ai1 = new HEIRUCT(100, -1, 1000, 20, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), false, false, true, new MASTStrategy5());
+
+            AI ai2 = new HEIRUCT(100, -1, x, 20, new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(), false, false, true, new MASTStrategy5());
+
 
             // AI ai1 = new RandomAI();
             // JFrame w = PhysicalGameStatePanel.newVisualizer(gs, 640, 640, false, PhysicalGameStatePanel.COLORSCHEME_BLACK);
@@ -105,33 +113,19 @@ public class Experiments {
               System.out.println("Winner= " + 10);
           } else
               System.out.println("Winner= " + 9);*/
-            if(j==0) {
+
                 data1.results.add(gs.winner());
                 data1.times.add(gs.getTime());
-            }else{
-                data2.results.add(gs.winner());
-                data2.times.add(gs.getTime());
-            }
+
 
             //   }
         }
-        if(j==10) {
+
             System.out.println("Finished - j="+j);
             System.out.println(data1.toString());
             String savedPath= data1.toFile();
             System.out.println("saved at "+savedPath);
-        }
-        else if(j==15) {
-            System.out.println("Finished - j="+j);
-            System.out.println(data2.toString());
-            String savedPath= data2.toFile();
-            System.out.println("saved at "+savedPath);
-        }else{
-            System.out.println("Finished - j="+j);
-            System.out.println(data3.toString());
-            String savedPath= data3.toFile();
-            System.out.println("saved at "+savedPath);
-        }
+
     }
 
 
