@@ -45,6 +45,57 @@ public class MASTStrategyO1 extends MAST {
     }
 
     @Override
+    public void simulate(List<GameState> lastGss ,GameState gs, int time) {
+        List<GameState> gsList = lastGss;
+        boolean gameover = false;
+        UnitTypeTable utt = gs.getUnitTypeTable();
+        workerType = utt.getUnitType("Worker");
+        baseType = utt.getUnitType("Base");
+        barracksType = utt.getUnitType("Barracks");
+
+        do {
+
+            if (gs.isComplete()) {
+                //System.out.println("in cycle");
+                gameover = gs.cycle();
+
+            } else {
+                //System.out.println("in getAction" + gs.getTime());
+                if (DEBUG >= 2) {
+                    System.out.println("******************SIMULATION AT TIME " + gs.getTime() + "******************************");
+                    List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
+                    System.out.println("Before -Resource usage ");
+                    for (Integer pos : positionsUsed) {
+                        System.out.println(pos % gs.getPhysicalGameState().getWidth() + "," + pos / gs.getPhysicalGameState().getWidth());
+                    }
+                    List<Unit> units = gs.getUnits();
+                    for (Unit test : units) {
+                        System.out.println(test.toString());
+                    }
+                }
+
+                PlayerAction player0Action = getAction(0, gs);
+                //System.out.println("Player 0 -"+player0Action.toString());
+                PlayerAction player1Action = getAction(1, gs);
+                //System.out.println("Player 1 -"+player1Action.toString());
+
+                gs.issue(player0Action);
+                gs.issue(player1Action);
+                gsList.add(gs);
+                if (DEBUG >= 2) {
+                    List<Integer> positionsUsed = gs.getResourceUsage().getPositionsUsed();
+                    System.out.println("After -Resource usage ");
+                    for (Integer pos : positionsUsed) {
+                        System.out.println(pos % gs.getPhysicalGameState().getWidth() + "," + pos / gs.getPhysicalGameState().getWidth());
+                    }
+                    System.out.println("**********************************END**********************************************");
+                }
+            }
+        } while (!gameover && gs.getTime() < time);
+
+        updateQvalues(gameover,gsList,gs);
+    }
+    @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();
@@ -130,7 +181,7 @@ public class MASTStrategyO1 extends MAST {
                                         aqv.qvalue =  (aqv.qvalue + aqv.visit_count_per_match)/aqv.visit_count;
                                     }
                                     else{
-                                        aqv.qvalue =  aqv.qvalue /aqv.visit_count;
+                                        //aqv.qvalue =  aqv.qvalue /aqv.visit_count;
                                     }
                                     aqv.resetVisitCountPerMatch();
                                     //aqv.qvalue = Math.min(0,Math.max(1,aqv.qvalue));

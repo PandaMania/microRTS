@@ -44,6 +44,10 @@ public class MASTStrategy6 extends MAST{
 
     }
     @Override
+    public void simulate(List<GameState> gsList,GameState gs, int time){
+        simulate(gs,time);
+    }
+    @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();
@@ -94,7 +98,7 @@ public class MASTStrategy6 extends MAST{
             if(gameover)
                 break;
             //i++;
-            //gsList.clear();
+            //gsList.clear(); //<- we keep track old game states (different from mast5)
             do {
 
                 if (gs.isComplete()) {

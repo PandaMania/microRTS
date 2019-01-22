@@ -17,6 +17,10 @@ public class MAST extends AI {
     public void simulate(GameState gs, int time) {
 
     }
+
+    public void simulate(List<GameState> lastGss ,GameState gs, int time) {
+
+    }
     @Override
     public PlayerAction getAction(int player, GameState gs) throws Exception {
         return null;

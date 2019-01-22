@@ -165,7 +165,13 @@ public class UCT extends AIWithComputationBudget implements InterruptibleAI {
         if (leaf!=null) {
             GameState gs2 = leaf.gs.clone();
             if(PLAYOUT){
-                mast.simulate(gs2,gs2.getTime()+MAXSIMULATIONTIME);
+                UCTNode backward = leaf;
+                List<GameState> gsList = new ArrayList<>();
+                while(backward!=null) {
+                    gsList.add(backward.gs.clone());
+                    backward = backward.parent;
+                }
+                mast.simulate(gsList,gs2,gs2.getTime()+MAXSIMULATIONTIME);
             }else{
                 simulate(gs2, gs2.getTime() + MAXSIMULATIONTIME);
             }

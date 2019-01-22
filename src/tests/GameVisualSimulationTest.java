@@ -11,10 +11,7 @@ import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import ai.mcts.huct.HEIRUCT;
 import ai.mcts.naivemcts.NaiveMCTS;
-import ai.mcts.uct.MASTStrategy5;
-import ai.mcts.uct.MASTStrategyO;
-import ai.mcts.uct.MASTStrategyO1;
-import ai.mcts.uct.UCT;
+import ai.mcts.uct.*;
 import ai.montecarlo.lsi.LSI;
 import ai.scv.SCV;
 import gui.PhysicalGameStatePanel;
@@ -33,7 +30,7 @@ import util.XMLWriter;
 public class GameVisualSimulationTest {
     public static void main(String args[]) throws Exception {
         UnitTypeTable utt = new UnitTypeTable();
-        PhysicalGameState pgs = PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//
+        PhysicalGameState pgs = PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//PhysicalGameState.load("maps/8x8/basesWorkers8x8.xml",utt);//PhysicalGameState.load("maps/16x16/basesWorkers16x16.xml", utt);//
 //        PhysicalGameState pgs = MapGenerator.basesWorkers8x8Obstacle();
 
         GameState gs = new GameState(pgs, utt);
@@ -41,8 +38,8 @@ public class GameVisualSimulationTest {
         int PERIOD = 1;
         boolean gameover = false;
         
-        AI ai1 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
-        AI ai2 = new NaiveMCTS(100,-1,1000,10,0.3f, 0.0f, 0.4f,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),true,true,new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai1 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategyO1());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai2 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),false, new MASTStrategy5());//new NaiveMCTS(100,-1,1000,10,0.3f, 0.0f, 0.4f,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),true,true,new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
 
 
 

@@ -43,7 +43,10 @@ public class MASTStrategyO extends MAST{
         ef =new SimpleSqrtEvaluationFunction3();
 
     }
-
+    @Override
+    public void simulate(List<GameState> gsList,GameState gs, int time){
+        simulate(gs,time);
+    }
     @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();

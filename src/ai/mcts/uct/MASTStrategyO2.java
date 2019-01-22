@@ -44,6 +44,10 @@ public class MASTStrategyO2 extends MAST {
 
     }
     @Override
+    public void simulate(List<GameState> gsList,GameState gs, int time){
+        simulate(gs,time);
+    }
+    @Override
     public void simulate(GameState simulatedGs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();

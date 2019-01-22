@@ -48,6 +48,10 @@ public class MASTStrategy5 extends MAST{
 
     }
     @Override
+    public void simulate(List<GameState> gsList,GameState gs, int time){
+        simulate(gs,time);
+    }
+    @Override
     public void simulate(GameState gs, int time){
         //List<PlayerAction> paList = new LinkedList<>();
         List<GameState> gsList = new LinkedList<>();
@@ -261,6 +265,8 @@ public class MASTStrategy5 extends MAST{
     public void reset() {
 
     }
+
+
 
     public PlayerAction getAction(int player, GameState gameState){
         if (!gameState.canExecuteAnyAction(player)) {
@@ -530,69 +536,6 @@ public class MASTStrategy5 extends MAST{
         }
         public boolean equalsUnitAction(UnitAction checkedUa){
             return ua.equals(checkedUa);
-        }
-    }
-    private class FastNode{
-        public int type;    // 0 : max, 1 : min, -1: Game-over
-        FastNode parent = null;
-        public GameState gs;
-
-        public List<PlayerAction> actions = null;
-        public List<UCTNode> children = null;
-        public float evaluation_bound = 0;
-        public float accum_evaluation = 0;
-        public int visit_count = 0;
-
-        public FastNode(GameState gs,int maxplayer,int minplayer,FastNode parent){
-            this.parent = parent;
-
-            if (gs.winner()!=-1 || gs.gameover()) {
-                type = -1;
-            } else if (gs.canExecuteAnyAction(maxplayer)) {
-                type = 0;
-                actions = new ArrayList<>();
-                children = new ArrayList<>();
-            } else if (gs.canExecuteAnyAction(minplayer)) {
-                type = 1;
-                actions = new ArrayList<>();
-                children = new ArrayList<>();
-            } else {
-                type = -1;
-                System.err.println("RTMCTSNode: This should not have happened...");
-            }
-
-        }
-        public double getExplorationValue(UCTNode child){
-            double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
-
-
-            if (type == 0) {
-                // max node:
-                exploration = (evaluation_bound + exploration) / (2 * evaluation_bound);
-            } else {
-                exploration = (evaluation_bound - exploration) / (2 * evaluation_bound);
-            }
-
-            return exploration;
-        }
-        public double getExploitationValue(UCTNode child){
-            double exploitation = ((double)child.accum_evaluation) / child.visit_count;
-
-            return exploitation;
-        }
-        public double childValue(UCTNode child) {
-            double exploitation = ((double)child.accum_evaluation) / child.visit_count;
-            double exploration = Math.sqrt(Math.log((double)visit_count)/child.visit_count);
-            if (type==0) {
-                // max node:
-                exploitation = (evaluation_bound + exploitation)/(2*evaluation_bound);
-            } else {
-                exploitation = (evaluation_bound - exploitation)/(2*evaluation_bound);
-            }
-//            System.out.println(exploitation + " + " + exploration);
-
-            double tmp = 0.05f*exploitation + exploration;
-            return tmp;
         }
     }
 }
