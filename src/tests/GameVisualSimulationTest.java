@@ -13,6 +13,7 @@ import ai.mcts.huct.HEIRUCT;
 import ai.mcts.naivemcts.NaiveMCTS;
 import ai.mcts.uct.*;
 import ai.montecarlo.lsi.LSI;
+import ai.montecarlo.lsi.Sampling;
 import ai.scv.SCV;
 import gui.PhysicalGameStatePanel;
 import java.io.OutputStreamWriter;
@@ -38,8 +39,15 @@ public class GameVisualSimulationTest {
         int PERIOD = 1;
         boolean gameover = false;
         
-        AI ai1 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategyO1());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
-        AI ai2 = new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),false, new MASTStrategy5());//new NaiveMCTS(100,-1,1000,10,0.3f, 0.0f, 0.4f,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),true,true,new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai1 = new HEIRUCT(100,1000,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());//new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategyO1());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
+        AI ai2 = new LSI(100,1000, 100, 0.25,
+                LSI.EstimateType.RANDOM_TAIL, LSI.EstimateReuseType.ALL,
+                LSI.GenerateType.PER_AGENT, Sampling.AgentOrderingType.ENTROPY,
+                LSI.EvaluateType.HALVING, false,
+                LSI.RelaxationType.NONE, 2,
+                false,
+                new RandomBiasedAI(),
+                new SimpleSqrtEvaluationFunction3(),true,new MASTStrategy5());//new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),false, new MASTStrategy5());//new NaiveMCTS(100,-1,1000,10,0.3f, 0.0f, 0.4f,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),true,true,new MASTStrategy5());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
 
 
 
