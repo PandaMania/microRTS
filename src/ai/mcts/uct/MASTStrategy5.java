@@ -228,7 +228,9 @@ public class MASTStrategy5 extends MAST{
 
                                     aqv.qvalue +=  ((double)aqv.accum_evaluation) / aqv.visit_count ;
 
-                                    //aqv.qvalue = Math.min(0,Math.max(1,aqv.qvalue));
+
+                                    //TURN ON THIS SHIT IF YOU WANT TO FINISH THE MATCH FASTER
+                                    //aqv.qvalue = Math.max(0,Math.min(1,aqv.qvalue));
 
                                     boolean isWin = (winner == u.getPlayer());
                                     //aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;
