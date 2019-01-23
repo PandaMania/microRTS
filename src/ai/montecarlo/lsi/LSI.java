@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import ai.mcts.uct.MAST;
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.PlayerAction;
@@ -72,6 +73,8 @@ public class LSI extends AIWithComputationBudget {
 
     private int actionCount;
 
+    private boolean PLAYOUT;
+    private MAST mast;
     
     public LSI(UnitTypeTable utt) {
         this(100, 100, 0.25,
@@ -104,8 +107,35 @@ public class LSI extends AIWithComputationBudget {
         this.epochal = epochal;
         this.simulationAi = simulationAi;
         this.evalFunction = evalFunction;
-
+        this.PLAYOUT =false;
         this.sampling = new Sampling(agentOrderingType, lookAhead, simulationAi, evalFunction);
+    }
+    public LSI(int available_time,int availableSimulationCount, int lookAhead, double split,
+               EstimateType estimateType, EstimateReuseType estimateReuseType, GenerateType generateType,
+               AgentOrderingType agentOrderingType, EvaluateType evaluateType, boolean eliteReuse,
+               RelaxationType relaxationType, int relaxationLimit, boolean epochal,
+               AI simulationAi, EvaluationFunction evalFunction,boolean PLAYOUT,MAST mast) {
+        super(available_time,availableSimulationCount);
+        this.lookAhead = lookAhead;
+        this.split = split;
+        this.estimateType = estimateType;
+        this.estimateReuseType = estimateReuseType;
+        this.generateType = generateType;
+        this.agentOrderingType = agentOrderingType;
+        this.evaluateType = evaluateType;
+        this.relaxationType = relaxationType;
+        this.relaxationLimit = relaxationLimit;
+        this.eliteReuse = eliteReuse;
+        this.epochal = epochal;
+        this.simulationAi = simulationAi;
+        this.evalFunction = evalFunction;
+        this.PLAYOUT = PLAYOUT;
+        if(this.PLAYOUT){
+            this.sampling = new Sampling(agentOrderingType, lookAhead, simulationAi, evalFunction,true,mast);
+        }
+        else {
+            this.sampling = new Sampling(agentOrderingType, lookAhead, simulationAi, evalFunction);
+        }
     }
     
     public void reset() {

@@ -4,6 +4,7 @@
 
 package ai.montecarlo.lsi;
 
+import ai.mcts.uct.MAST;
 import util.CartesianProduct;
 import ai.core.AI;
 import ai.evaluation.EvaluationFunction;
@@ -30,6 +31,8 @@ public class Sampling {
     private final int lookAhead;
     private final EvaluationFunction evalFunction;
     private final AI simulationAi;
+    private MAST mastAi;
+    private boolean PLAYOUT;
 
     private int simulationCount = 0;
 
@@ -40,13 +43,26 @@ public class Sampling {
         this.simulationAi = simulationAi;
     }
 
+    public Sampling(AgentOrderingType agentOrderingType, int lookAhead, AI simulationAi, EvaluationFunction evalFunction, boolean PLAYOUT, MAST mast) {
+        this.agentOrderingType = agentOrderingType;
+        this.lookAhead = lookAhead;
+        this.evalFunction = evalFunction;
+        this.simulationAi = simulationAi;
+        this.PLAYOUT = PLAYOUT;
+        this.mastAi =mast;
+    }
+
     public double evaluatePlayerAction(int player, GameState gs, PlayerAction playerAction, int numEval) throws Exception {
         double evalMean = 0;
 
         for (int step = 0; step < numEval; step++) {
             GameState gs2 = gs.cloneIssue(playerAction);
             GameState gs3 = gs2.clone();
-            simulate(gs3, gs3.getTime() + lookAhead);
+            if(PLAYOUT){
+                mastAi.simulate(gs3, gs3.getTime() + lookAhead);
+            }else {
+                simulate(gs3, gs3.getTime() + lookAhead);
+            }
             int time = gs3.getTime() - gs2.getTime();
             double eval = evalFunction.evaluate(player, 1 - player, gs3)*Math.pow(0.99, time / 10.0);
 
