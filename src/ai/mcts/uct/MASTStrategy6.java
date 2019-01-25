@@ -16,6 +16,11 @@ import static rts.UnitAction.TYPE_ATTACK_LOCATION;
 import static rts.UnitAction.TYPE_HARVEST;
 import static rts.UnitAction.TYPE_RETURN;
 
+/**
+ * @author Truong Huy Cuong
+ * Second strongest version
+ * updated MAST per unit + update table from the final node of a section to the root of tree
+ */
 public class MASTStrategy6 extends MAST{
     private static final double BIAS_Q_VALUE = 1f;
     private static final double REGULAR_Q_VALUE = 0.2f;

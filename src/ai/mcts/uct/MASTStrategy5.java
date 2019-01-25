@@ -17,8 +17,9 @@ import static rts.UnitAction.TYPE_ATTACK_LOCATION;
 import static rts.UnitAction.TYPE_HARVEST;
 import static rts.UnitAction.TYPE_RETURN;
 /**
- * @author Huy
- * updated MAST per unit
+ * @author Truong Huy Cuong
+ * Stronghest version
+ * updated MAST per unit + update table in nodes belong to a section
  */
 public class MASTStrategy5 extends MAST{
     private static final double BIAS_Q_VALUE = 1f;
@@ -77,7 +78,7 @@ public class MASTStrategy5 extends MAST{
                 }
             }
         }*/
-        int numOfSimulations = (time - gs.getTime()) / TIME_PER_A_MATCH;
+        //int numOfSimulations = (time - gs.getTime()) / TIME_PER_A_MATCH;
         int simulateTimePerMatch =(time - gs.getTime()) / NUMBER_OF_MATCHES;
 
         int i=0;
@@ -230,7 +231,7 @@ public class MASTStrategy5 extends MAST{
 
 
                                     //TURN ON THIS SHIT IF YOU WANT TO FINISH THE MATCH FASTER
-                                    //aqv.qvalue = Math.max(0,Math.min(1,aqv.qvalue));
+                                    aqv.qvalue = Math.max(0,Math.min(1,aqv.qvalue));
 
                                     boolean isWin = (winner == u.getPlayer());
                                     //aqv.qvalue = aqv.qvalue * (1 - DECAY_FACTOR) + (isWin ? 1.0f : 0) * DECAY_FACTOR;

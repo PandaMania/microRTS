@@ -13,8 +13,8 @@ import util.Sampler;
 import java.util.*;
 
 /**
- * @author Huy
- * MAST original version with UnitType
+ * @author Huy Cuong
+ * MAST original version with units + Update from terminal to the root
  */
 public class MASTStrategyO1 extends MAST {
     private static final double BIAS_Q_VALUE = 1f;

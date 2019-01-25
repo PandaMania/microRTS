@@ -16,6 +16,11 @@ import static rts.UnitAction.TYPE_ATTACK_LOCATION;
 import static rts.UnitAction.TYPE_HARVEST;
 import static rts.UnitAction.TYPE_RETURN;
 
+ /* @author Truong Huy Cuong
+  * MAST original version with units + Update from terminal to the root
+  * I forget what i change it :) so just use MASTStrategyO1
+  *
+  */
 public class MASTStrategyO2 extends MAST {
     private static final double BIAS_Q_VALUE = 1f;
     private static final double REGULAR_Q_VALUE = 0.2f;

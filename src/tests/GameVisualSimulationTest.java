@@ -40,7 +40,7 @@ public class GameVisualSimulationTest {
         boolean gameover = false;
         
         AI ai1 = new HEIRUCT(100,1000,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());//new UCT(100,-1,1000,10,new RandomBiasedAI(), new SimpleSqrtEvaluationFunction3(),true, new MASTStrategyO1());//new HEIRUCT(100,-1,1000,14,new RandomBiasedAI(),new SimpleSqrtEvaluationFunction3(),false,false,true,new MASTStrategy5());
-        AI ai2 = new LSI(100,1000, 100, 0.25,
+        AI ai2 = new LSI(100,1000, 1000, 0.25,
                 LSI.EstimateType.RANDOM_TAIL, LSI.EstimateReuseType.ALL,
                 LSI.GenerateType.PER_AGENT, Sampling.AgentOrderingType.ENTROPY,
                 LSI.EvaluateType.HALVING, false,
